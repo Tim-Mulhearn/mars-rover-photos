@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mars Rover Photos</title>
+  <style>
+    [v-cloak]{display:none}
+  </style>
+  <link rel="icon" type="image/x-icon" href="fav-icon.ico" />
+  <link rel="stylesheet" href="styles/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+<main id="app" v-cloak>
+  <section>
+    <div v-if="status === 'error'" class="error-message">{{ errorMsgValue }}</div>
+    <div v-if="status === 'loading'" class="loading-message">Loading rover manifests…</div>
+  </section>
+  <!-- Head section -->
+  <section class="main-header" v-if="status === 'ready'">
+    <span class="main-header title">Mars Rover Photos</span>
+    <span class="main-header gallery">Gallery</span>
+    <span class="main-header random-photo">Random Photo</span>
+  </section>
+  <!-- Site description -->
+  <section class="main-description" v-if="status === 'ready'">
+    <p>
+      Showing <strong>today’s</strong> Perseverance shots (latest sol). Switch to <strong>Curiosity</strong> to swap the slideshow.
+      <strong>Gallery</strong> browses today’s images; <strong>Random Photo</strong> serves one up.
+    </p>
+    <p>Historic rovers: manifest data only—no images.</p>
+  </section>
+  <!-- Slideshow -->
+  <section
+    class="main-image-section"
+    v-if="status === 'ready' && current"
+    :style="{ backgroundImage: `url(${current.img_src})` }"
+    @mouseenter="stop"
+    @mouseleave="start"
+  >
+    <div class="image-info">
+      <span class="image-info-data title">{{ activeRoverLabel }}</span>
+      <span class="image-info-data data">Sol {{ current.sol }}</span>
+      <span class="mars-icon" aria-hidden="true"></span>
+      <span class="image-info-data data">{{ current.camera.name }}</span>
+<!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
+    </div>
+    <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
+    <button class="nav next" @click="next" aria-label="Next slide">›</button>
+  </section>
+  <!-- Manifests -->
+  <section class="main-manifests-section" v-if="status === 'ready'">
+    <span class="main-manifest active">
+      <span class="rover-active-heading">Active Rovers</span>
+      <!-- Perseverance -->
+      <span class="rover active" v-if="nasaRoverData.perseverance" @click="activeRover='perseverance'">
+        <div class="rover-data heading">{{ nasaRoverData.perseverance.name }}</div>
+        <div class="rover-data info status active">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.total_photos }}</span>
+        </div>
+      </span>
+      <!-- Curiosity -->
+      <span class="rover active" v-if="nasaRoverData.curiosity" @click="activeRover='curiosity'">
+        <div class="rover-data heading">{{ nasaRoverData.curiosity.name }}</div>
+        <div class="rover-data info status active">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.total_photos }}</span>
+        </div>
+      </span>
+    </span>
+    <span class="main-manifest inactive">
+      <span class="rover-inactive-heading">Historic Rovers</span>
+      <!-- Opportunity -->
+      <span class="rover" v-if="nasaRoverData.opportunity">
+        <div class="rover-data heading">{{ nasaRoverData.opportunity.name }}</div>
+        <div class="rover-data info status complete">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.opportunity.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.opportunity.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.opportunity.total_photos }}</span>
+        </div>
+      </span>
+      <!-- Spirit -->
+      <span class="rover" v-if="nasaRoverData.spirit">
+        <div class="rover-data heading">{{ nasaRoverData.spirit.name }}</div>
+        <div class="rover-data info status complete">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.spirit.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.spirit.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.spirit.total_photos }}</span>
+        </div>
+      </span>
+    </span>
+  </section>
+
+  <script>
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+    createApp({
+      setup() {
+        const ONE_DAY = 24 * 60 * 60 * 1_000;
+
+        // States
+        const status = ref('loading');
+        const errorMsgValue = ref('');
+        const nasaRoverData = ref({});
+        const activeRover = ref('perseverance');
+
+        // Slideshow
+        const AUTOPLAY_MS = 5000;
+        const index = ref(0);
+        let timer = null;
+
+        const slides = Vue.computed(() =>
+          nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+        );
+        const current = Vue.computed(() => slides.value[index.value] ?? null);
+        const activeRoverLabel = Vue.computed(
+          () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
+        );
+
+        function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
+        function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
+        function start(){ stop(); if (slides.value.length > 1) timer = setInterval(next, AUTOPLAY_MS); }
+        function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+
+        Vue.watch(slides, (arr)=>{
+          index.value = 0;
+          arr.length > 1 ? start() : stop();
+        });
+
+        // optional keyboard nav
+        const keyHandler = (e) => {
+          if (status.value !== 'ready') return;
+          if (e.key === 'ArrowRight') next();
+          if (e.key === 'ArrowLeft')  prev();
+        };
+        onMounted(() => window.addEventListener('keydown', keyHandler));
+        onUnmounted(() => window.removeEventListener('keydown', keyHandler));
+
+        // Cache data
+        function cacheData(key, value, ttlMs) {
+          localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
+        }
+
+        function checkCachedData(key) {
+          const raw = localStorage.getItem(key);
+          if (!raw) return false;
+          try {
+            const { value, expires } = JSON.parse(raw);
+            if (!Number.isFinite(expires) || Date.now() > expires) {
+              localStorage.removeItem(key);
+              return false;
+            }
+            nasaRoverData.value = value;
+            status.value = 'ready';
+            errorMsgValue.value = '';
+            console.log('cache hit:', key);
+            return true;
+          } catch {
+            localStorage.removeItem(key);
+            return false;
+          }
+        }
+
+        // API fetch
+        async function getNasaRoverData() {
+          status.value = 'loading';
+          errorMsgValue.value = '';
+          try {
+            const api_key = 'DdSDo4hzguIXed3jRisrxALeX8BcQ2XrN4uNNhqY';
+            const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+            const results = {};
+            const COUNT = 25; // max kept from latest day
+
+            for (const rover of rovers) {
+              // Manifest
+              const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
+              manifestUrl.search = new URLSearchParams({ api_key }).toString();
+              const res = await fetch(manifestUrl);
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const json = await res.json();
+              const manifest = { [rover]: json.photo_manifest ?? json };
+
+              // Latest photos for active rovers only
+              const recentPhotos = [];
+              if (rover === 'perseverance' || rover === 'curiosity') {
+                const latestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/latest_photos`);
+                latestUrl.search = new URLSearchParams({ api_key }).toString();
+                const resLatest = await fetch(latestUrl);
+                if (!resLatest.ok) throw new Error(`HTTP ${resLatest.status}`);
+                const { latest_photos = [] } = await resLatest.json();
+                const chosen = latest_photos.slice(0, COUNT);
+                if (chosen.length) {
+                  const sol = chosen[0]?.sol ?? null;
+                  recentPhotos.push({ sol, photos: chosen });
+                }
+              }
+
+              // trim heavy per-sol list
+              delete manifest[rover].photos;
+
+              const key = (manifest[rover].name || rover).toLowerCase();
+              const entry = { ...manifest[rover], recentPhotos };
+              results[key] = entry;
+            }
+
+            nasaRoverData.value = results;
+            // WRITE CACHE immediately on success
+            cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+
+            status.value = 'ready';
+            errorMsgValue.value = '';
+          } catch (e) {
+            status.value = 'error';
+            errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+          }
+        }
+
+        // Date formatter
+        function fmtDate(iso, locale = 'en-GB') {
+          if (!iso) return '';
+          const [y, m, d] = iso.split('-').map(Number);
+          const dt = new Date(Date.UTC(y, m - 1, d));
+          return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        onMounted(async () => {
+          const ok = checkCachedData('nasaRoverData');
+          if (!ok) {
+            await getNasaRoverData();
+          } else {
+            // Ensure slideshow starts if cached data has slides
+            if (slides.value.length > 1) start();
+          }
+        });
+
+        return {
+          // Status
+          status, errorMsgValue,
+          // Data
+          nasaRoverData,
+          // Dlideshow
+          activeRover, activeRoverLabel, current, next, prev, start, stop,
+          // Utils
+          fmtDate,
+        };
+      }
+    }).mount('#app');
+  </script>
+</main>
+</body>
+</html>
