@@ -5,9 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mars Rover Photos</title>
-  <style>
-    [v-cloak]{display:none}
-  </style>
+  <style>[v-cloak]{display:none}</style>
   <link rel="icon" type="image/x-icon" href="fav-icon.ico" />
   <link rel="stylesheet" href="styles/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,11 +15,11 @@
 </head>
 <body>
 <main id="app" v-cloak>
-
   <section>
     <div v-if="status === 'error'" class="error-message">{{ errorMsgValue }}</div>
     <div v-if="status === 'loading'" class="loading-message">Loading rover manifests…</div>
   </section>
+
   <!-- Head section -->
   <section class="main-header" v-if="status === 'ready'">
     <span class="main-header title">Mars Rover Photos</span>
@@ -30,9 +28,9 @@
       class="main-header home"
       :class="{ 'is-active': activeAction === 'home' }"
       role="button" tabindex="0"
-      @click="activeAction = 'home', activeGallery === 'perseverance'"
-      @keydown.enter="activeAction = 'home'"
-      @keydown.space.prevent="activeAction = 'home'"
+      @click="activeAction = 'home'; activeGallery = 'perseverance'"
+      @keydown.enter="activeAction = 'home'; activeGallery = 'perseverance'"
+      @keydown.space.prevent="activeAction = 'home'; activeGallery = 'perseverance'"
     >Home</span>
 
     <span
@@ -53,21 +51,23 @@
       @keydown.space.prevent="openRandomPhoto"
     >Random Photo</span>
   </section>
+
   <!-- Site description -->
   <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
     <p>
-      Showing <strong>today’s Perseverance</strong> shots (latest sol). Switch to <strong>Curiosity</strong> to swap the slideshow.
-      <strong>Gallery</strong> browses today’s images; <strong>Random Photo</strong> serves one up.
+      Showing <strong>this week’s Perseverance</strong> shots (last 7 sols; up to 3 per sol). Switch to <strong>Curiosity</strong> to swap the slideshow.
+      <strong>Gallery</strong> browses the same weekly set; <strong>Random Photo</strong> picks from both active rovers.
     </p>
     <p>Historic rovers: manifest data only—no images.</p>
   </section>
-  <!-- Slideshow -->
+
+  <!-- Hero Slideshow -->
   <section
     class="main-image-section"
     v-if="status === 'ready' && current && activeAction === 'home'"
     :style="{ backgroundImage: `url(${current.img_src})` }"
     @mouseenter="stop"
-    @mouseleave="start"
+    @mouseleave="startGuarded"
   >
     <div class="image-info">
       <span class="image-info-data title">{{ activeRoverLabel }}</span>
@@ -76,16 +76,22 @@
       <span class="image-info-data data">{{ current.camera.name }}</span>
       <span class="mars-icon" aria-hidden="true"></span>
       <span class="image-info-data data">{{ current.id }}</span>
-<!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
     </div>
-    <span class="image-info-view" @click="openPhoto(current)"><img src="images/view.svg">View Image</span>
+
+    <!-- View Image opens modal slideshow with the same slides -->
+    <span class="image-info-view" @click="openPhoto(current, slides)">
+      <img src="images/view.svg" alt="" aria-hidden="true">View Image
+    </span>
+
     <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
     <button class="nav next" @click="next" aria-label="Next slide">›</button>
   </section>
+
   <!-- Manifests -->
   <section class="main-manifests-section" v-if="status === 'ready' && activeAction === 'home'">
     <span class="main-manifest active">
       <span class="rover-active-heading">Active Rovers</span>
+
       <!-- Perseverance -->
       <span
         class="rover active"
@@ -119,6 +125,7 @@
           <span class="info-right">{{ nasaRoverData.perseverance.total_photos }}</span>
         </div>
       </span>
+
       <!-- Curiosity -->
       <span
         class="rover active"
@@ -153,9 +160,10 @@
         </div>
       </span>
     </span>
+
     <span class="main-manifest inactive">
       <span class="rover-inactive-heading">Historic Rovers</span>
-      <!-- Opportunity -->
+
       <span class="rover complete" v-if="nasaRoverData.opportunity">
         <div class="rover-data heading">{{ nasaRoverData.opportunity.name }}</div>
         <div class="rover-data info status complete">
@@ -183,7 +191,7 @@
           <span class="info-right">{{ nasaRoverData.opportunity.total_photos }}</span>
         </div>
       </span>
-      <!-- Spirit -->
+
       <span class="rover complete" v-if="nasaRoverData.spirit">
         <div class="rover-data heading">{{ nasaRoverData.spirit.name }}</div>
         <div class="rover-data info status complete">
@@ -213,47 +221,57 @@
       </span>
     </span>
   </section>
+
   <!-- Gallery -->
   <section class="main-gallery-section" v-if="status === 'ready' && activeAction === 'gallery' && (activeGallery === 'perseverance' || activeGallery === 'curiosity')">
     <div>
-       <span
-         class="main-gallery perseverance"
-         :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'perseverance'}"
-         role="button" tabindex="0"
-         @click="activeGallery = 'perseverance', activeRover = 'perseverance'"
-         @keydown.enter="activeGallery = 'perseverance'"
-         @keydown.space.prevent="activeGallery = 'perseverance'"
-       >Perseverance Photos</span>
+      <span
+        class="main-gallery perseverance"
+        :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'perseverance'}"
+        role="button" tabindex="0"
+        @click="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+        @keydown.enter="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+        @keydown.space.prevent="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+      >Perseverance Photos</span>
 
       <span
         class="main-gallery curiosity"
         :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'curiosity'}"
         role="button" tabindex="0"
-        @click="activeGallery = 'curiosity' , activeRover = 'curiosity'"
-        @keydown.enter="activeGallery = 'curiosity'"
-        @keydown.space.prevent="activeGallery = 'curiosity'"
+        @click="activeGallery = 'curiosity'; activeRover = 'curiosity'"
+        @keydown.enter="activeGallery = 'curiosity'; activeRover = 'curiosity'"
+        @keydown.space.prevent="activeGallery = 'curiosity'; activeRover = 'curiosity'"
       >Curiosity Photos</span>
     </div>
 
     <div class="main-gallery-wrapper">
-      <div v-if="nasaRoverData[activeRover]?.recentPhotos?.length"
-           class="main-gallery-images">
+      <div
+        v-if="nasaRoverData[activeRover]?.recentPhotos?.length"
+        class="main-gallery-images"
+      >
         <div
           class="gallery-item"
           v-for="p in nasaRoverData[activeRover].recentPhotos[0].photos"
           :key="p.id"
         >
-
           <div class="gallery-item-image-info">
             <span class="gallery-item-image-info-data">Sol {{ p.sol }}</span>
             <span class="mars-icon" aria-hidden="true"></span>
             <span class="gallery-item-image-info-data">{{ p.camera.name }}</span>
             <span class="mars-icon" aria-hidden="true"></span>
             <span class="gallery-item-image-info-data">{{ p.id }}</span>
-            <span class="image-info-view" @click="openPhoto(p)"><img src="images/view.svg">View Image</span>
-          </div>
-          <img :src="p.img_src" :alt="`Sol ${p.sol} — ${p.camera.full_name}`" class="gallery-image clickable">
 
+            <span class="image-info-view" @click="openPhoto(p, nasaRoverData[activeRover].recentPhotos[0].photos)">
+              <img src="images/view.svg" alt="" aria-hidden="true">View Image
+            </span>
+          </div>
+
+          <img
+            :src="p.img_src"
+            :alt="`Sol ${p.sol} — ${p.camera.full_name}`"
+            class="gallery-image clickable"
+            @click="openPhoto(p, nasaRoverData[activeRover].recentPhotos[0].photos)"
+          >
         </div>
       </div>
     </div>
@@ -268,8 +286,13 @@
     tabindex="-1"
     ref="modalBackdrop"
   >
-    <figure class="modal">
+    <figure class="modal" @mouseenter="stopModal" @mouseleave="startModal">
       <img :src="modalPhoto.img_src" :alt="`Sol ${modalPhoto.sol} – ${modalPhoto?.camera?.full_name || modalPhoto?.camera?.name || ''}`">
+
+      <!-- modal slideshow controls -->
+      <button class="nav prev" @click="modalPrev" aria-label="Previous image">‹</button>
+      <button class="nav next" @click="modalNext" aria-label="Next image">›</button>
+
       <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
       <figcaption class="modal-caption">
         <span>Sol: {{ modalPhoto.sol }}</span>
@@ -278,19 +301,19 @@
         <span class="mars-icon" aria-hidden="true"></span>
         <span>Camera: {{ modalPhoto?.camera?.full_name }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
-        <span>Date: {{ fmtDate(current.earth_date) }}</span>
+        <span>Date: {{ fmtDate(modalPhoto.earth_date) }}</span>
       </figcaption>
     </figure>
   </div>
 
   <script>
-    const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
+    const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
 
     createApp({
       setup() {
         const ONE_DAY = 24 * 60 * 60 * 1_000;
 
-        // States
+        // State
         const status = ref('loading');
         const errorMsgValue = ref('');
         const nasaRoverData = ref({});
@@ -298,28 +321,93 @@
         const activeAction = ref('home');
         const activeGallery = ref('perseverance');
 
-        // Slideshow
+        // Hero slideshow
         const AUTOPLAY_MS = 5000;
         const index = ref(0);
         let timer = null;
 
+        // Modal slideshow
+        const MODAL_AUTOPLAY_MS = 5000;
         const isModalOpen = ref(false);
         const modalPhoto  = ref(null);
         const modalBackdrop = ref(null);
+        const modalSlides = ref([]);
+        const modalIndex  = ref(0);
+        let modalTimer = null;
+        const wasPlaying = ref(false);
 
-        function openPhoto(photo) {
+        // ---- helpers for timers ----
+        function start() {
+          stop();
+          if (slides.value.length > 1 && !isModalOpen.value) {
+            timer = setInterval(next, AUTOPLAY_MS);
+          }
+        }
+        function stop() {
+          if (timer) { clearInterval(timer); timer = null; }
+        }
+        function startGuarded() {
+          // don't start hero autoplay while modal is open
+          if (!isModalOpen.value) start();
+        }
+
+        function startModal() {
+          stopModal();
+          if (modalSlides.value.length > 1) {
+            modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
+          }
+        }
+        function stopModal() {
+          if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
+        }
+
+        // ---- open/close modal & wiring collection ----
+        function normalizeCollection(col) {
+          // accepts plain array or a ref/computed
+          if (Array.isArray(col)) return col;
+          if (col && Array.isArray(col.value)) return col.value;
+          return [];
+        }
+
+        function openPhoto(photo, collection) {
           if (!photo) return;
-          modalPhoto.value = photo;
+
+          // seed modal slides
+          const col = normalizeCollection(collection);
+          modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
+
+          // find index for clicked/hero photo
+          const idx = modalSlides.value.findIndex(p => p.id === photo.id);
+          modalIndex.value = idx >= 0 ? idx : 0;
+          modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
+
+          // pause hero if it was playing
+          wasPlaying.value = !!timer;
+          stop();
+
           isModalOpen.value = true;
           nextTick(() => modalBackdrop.value?.focus());
         }
+
         function closeModal() {
           isModalOpen.value = false;
           modalPhoto.value = null;
+          stopModal();
+          if (wasPlaying.value && slides.value.length > 1) start();
+        }
+
+        function modalNext(){
+          if (!modalSlides.value.length) return;
+          modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
+          modalPhoto.value = modalSlides.value[modalIndex.value];
+        }
+        function modalPrev(){
+          if (!modalSlides.value.length) return;
+          modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
+          modalPhoto.value = modalSlides.value[modalIndex.value];
         }
 
         function openRandomPhoto() {
-          // pool from both active rovers; fallbacks if needed
           const pool = [
             ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
             ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
@@ -329,40 +417,56 @@
             return;
           }
           const pick = pool[Math.floor(Math.random() * pool.length)];
-          // also set UI state if you want the header to show as active
-          // activeAction.value = 'random';  // only if you keep activeAction
-          openPhoto(pick);
+          openPhoto(pick, pool);
+          activeAction.value = 'random'; // underline "Random Photo"
         }
 
-        // Slide show
-        const slides = Vue.computed(() =>
+        // Hero slides
+        const slides = computed(() =>
           nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
         );
-        const current = Vue.computed(() => slides.value[index.value] ?? null);
-        const activeRoverLabel = Vue.computed(
+        const current = computed(() => slides.value[index.value] ?? null);
+        const activeRoverLabel = computed(
           () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
         );
 
         function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
         function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
-        function start(){ stop(); if (slides.value.length > 1) timer = setInterval(next, AUTOPLAY_MS); }
-        function stop(){ if (timer) { clearInterval(timer); timer = null; } }
 
-        Vue.watch(slides, (arr)=>{
+        // When slides change, (re)start hero only if modal is closed
+        watch(slides, (arr)=>{
           index.value = 0;
-          arr.length > 1 ? start() : stop();
+          if (arr.length > 1 && !isModalOpen.value) start(); else stop();
         });
 
-        // optional keyboard nav
+        // Keep hero paused while modal is open; run modal autoplay while open
+        watch(isModalOpen, (open) => {
+          if (open) {
+            stop();       // hero off
+            startModal(); // modal on
+          } else {
+            stopModal();  // modal off
+            if (wasPlaying.value && slides.value.length > 1) start();
+          }
+        });
+
+        // Keyboard nav (modal has priority)
         const keyHandler = (e) => {
           if (status.value !== 'ready') return;
+
+          if (isModalOpen.value) {
+            if (e.key === 'ArrowRight') modalNext();
+            if (e.key === 'ArrowLeft')  modalPrev();
+            if (e.key === 'Escape')     closeModal();
+            return;
+          }
           if (e.key === 'ArrowRight') next();
           if (e.key === 'ArrowLeft')  prev();
         };
         onMounted(() => window.addEventListener('keydown', keyHandler));
         onUnmounted(() => window.removeEventListener('keydown', keyHandler));
 
-        // Cache data
+        // Cache utils
         function cacheData(key, value, ttlMs) {
           localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
         }
@@ -379,7 +483,6 @@
             nasaRoverData.value = value;
             status.value = 'ready';
             errorMsgValue.value = '';
-            console.log('cache hit:', key);
             return true;
           } catch {
             localStorage.removeItem(key);
@@ -387,15 +490,16 @@
           }
         }
 
-        // API fetch
+        // API fetch (keeps your merged 7 days x 3 photos shape)
         async function getNasaRoverData() {
           status.value = 'loading';
           errorMsgValue.value = '';
           try {
-            const api_key = 'DdSDo4hzguIXed3jRisrxALeX8BcQ2XrN4uNNhqY';
+            const api_key = 'ADD-YOUR-API-KEY-HERE';
             const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
             const results = {};
-            const COUNT = 25; // max kept from latest day
+            const DAYS = 7;
+            const PER_DAY = 3;
 
             for (const rover of rovers) {
               // Manifest
@@ -406,35 +510,38 @@
               const json = await res.json();
               const manifest = { [rover]: json.photo_manifest ?? json };
 
-              // Latest photos for active rovers only
-              const recentPhotos = [];
+              delete manifest[rover].photos;
+
+              let aggregated = [];
               if (rover === 'perseverance' || rover === 'curiosity') {
-                const latestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/latest_photos`);
-                latestUrl.search = new URLSearchParams({ api_key }).toString();
-                const resLatest = await fetch(latestUrl);
-                if (!resLatest.ok) throw new Error(`HTTP ${resLatest.status}`);
-                const { latest_photos = [] } = await resLatest.json();
-                const chosen = latest_photos.slice(0, COUNT);
-                if (chosen.length) {
-                  const sol = chosen[0]?.sol ?? null;
-                  recentPhotos.push({ sol, photos: chosen });
+                const maxSol = Number(manifest[rover].max_sol) || 0;
+                let daysFetched = 0;
+                for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+                  const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
+                  solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
+                  const r = await fetch(solUrl);
+                  if (!r.ok) continue;
+                  const { photos = [] } = await r.json();
+                  if (!photos.length) continue;
+                  aggregated.push(...photos.slice(0, PER_DAY));
+                  daysFetched++;
                 }
               }
 
-              // trim heavy per-sol list
-              delete manifest[rover].photos;
-
               const key = (manifest[rover].name || rover).toLowerCase();
-              const entry = { ...manifest[rover], recentPhotos };
+              const entry = {
+                ...manifest[rover],
+                recentPhotos: [
+                  { sol: manifest[rover].max_sol ?? null, photos: aggregated }
+                ]
+              };
               results[key] = entry;
             }
 
             nasaRoverData.value = results;
-            // WRITE CACHE immediately on success
             cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
-
             status.value = 'ready';
-            errorMsgValue.value = '';
+            if (slides.value.length > 1) start();
           } catch (e) {
             status.value = 'error';
             errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
@@ -454,23 +561,25 @@
           if (!ok) {
             await getNasaRoverData();
           } else {
-            // Ensure slideshow starts if cached data has slides
             if (slides.value.length > 1) start();
           }
         });
+
+        onUnmounted(() => { stop(); stopModal(); });
 
         return {
           // Status
           status, errorMsgValue,
           // Data
           nasaRoverData,
-          // Slideshow
-          activeRover, activeRoverLabel, current, next, prev, start, stop, activeGallery,
-          // Header selection (underline)
-          activeAction,
-          // Modal
+          // Hero slideshow
+          activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
+          // Header selection
+          activeAction, activeGallery,
+          // Modal slideshow
           isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
-          // Format date
+          modalNext, modalPrev, startModal, stopModal,
+          // Utils
           fmtDate,
         };
       }
