@@ -294,15 +294,15 @@
 
       <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
       <figcaption class="modal-caption">
-        <span>Rover: {{ modalPhoto.rover['name'] }}</span>
+        <span><strong>Rover:</strong> {{ modalPhoto.rover['name'] }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
-        <span>Sol: {{ modalPhoto.sol }}</span>
+        <span><strong>Sol:</strong> {{ modalPhoto.sol }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
-        <span>Id: {{ modalPhoto.id }}</span>
+        <span><strong>Date:</strong> {{ fmtDate(modalPhoto.earth_date) }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
-        <span>Camera: {{ modalPhoto?.camera?.full_name }}</span>
+        <span><strong>Id:</strong> {{ modalPhoto.id }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
-        <span>Date: {{ fmtDate(modalPhoto.earth_date) }}</span>
+        <span><strong>Camera:</strong> {{ modalPhoto?.camera?.full_name }}</span>
       </figcaption>
     </figure>
   </div>
