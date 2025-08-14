@@ -418,6 +418,13 @@ main {
 .modal .prev{ left:.5rem;  font-size: var(--font-size-very-large); }
 .modal .next{ right:.5rem; font-size: var(--font-size-very-large); }
 
+/* Footer */
+.nasa-information {
+  padding-top: 1.5rem;
+  text-align: center;
+  font-size: var(--font-size-small);
+}
+
 /* Media queries */
 @media (min-width: 768px) and (max-width: 1023px) {
   main { width: 90vw; }

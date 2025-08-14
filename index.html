@@ -305,7 +305,7 @@
       </figcaption>
     </figure>
   </div>
-
+  <div class="nasa-information" v-if="status === 'ready'">Rover data from: https://api.nasa.gov/</div>
   <script>
     const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
 
@@ -506,7 +506,7 @@
         //   status.value = 'loading';
         //   errorMsgValue.value = '';
         //   try {
-        //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
+        //     const api_key = 'DdSDo4hzguIXed3jRisrxALeX8BcQ2XrN4uNNhqY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
         //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
         //     const results = {};
         //     const DAYS = 7;
