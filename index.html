@@ -17,6 +17,7 @@
 </head>
 <body>
 <main id="app" v-cloak>
+
   <section>
     <div v-if="status === 'error'" class="error-message">{{ errorMsgValue }}</div>
     <div v-if="status === 'loading'" class="loading-message">Loading rover manifests…</div>
@@ -24,13 +25,38 @@
   <!-- Head section -->
   <section class="main-header" v-if="status === 'ready'">
     <span class="main-header title">Mars Rover Photos</span>
-    <span class="main-header gallery">Gallery</span>
-    <span class="main-header random-photo">Random Photo</span>
+
+    <span
+      class="main-header home"
+      :class="{ 'is-active': activeAction === 'home' }"
+      role="button" tabindex="0"
+      @click="activeAction = 'home', activeGallery === 'perseverance'"
+      @keydown.enter="activeAction = 'home'"
+      @keydown.space.prevent="activeAction = 'home'"
+    >Home</span>
+
+    <span
+      class="main-header gallery"
+      :class="{ 'is-active': activeAction === 'gallery'}"
+      role="button" tabindex="0"
+      @click="activeAction = 'gallery'"
+      @keydown.enter="activeAction = 'gallery'"
+      @keydown.space.prevent="activeAction = 'gallery'"
+    >Gallery</span>
+
+    <span
+      class="main-header random-photo"
+      :class="{ 'is-active': activeAction === 'random' }"
+      role="button" tabindex="0"
+      @click="openRandomPhoto"
+      @keydown.enter="openRandomPhoto"
+      @keydown.space.prevent="openRandomPhoto"
+    >Random Photo</span>
   </section>
   <!-- Site description -->
-  <section class="main-description" v-if="status === 'ready'">
+  <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
     <p>
-      Showing <strong>today’s</strong> Perseverance shots (latest sol). Switch to <strong>Curiosity</strong> to swap the slideshow.
+      Showing <strong>today’s Perseverance</strong> shots (latest sol). Switch to <strong>Curiosity</strong> to swap the slideshow.
       <strong>Gallery</strong> browses today’s images; <strong>Random Photo</strong> serves one up.
     </p>
     <p>Historic rovers: manifest data only—no images.</p>
@@ -38,27 +64,36 @@
   <!-- Slideshow -->
   <section
     class="main-image-section"
-    v-if="status === 'ready' && current"
+    v-if="status === 'ready' && current && activeAction === 'home'"
     :style="{ backgroundImage: `url(${current.img_src})` }"
     @mouseenter="stop"
     @mouseleave="start"
+    @click="openPhoto(current)"
   >
     <div class="image-info">
       <span class="image-info-data title">{{ activeRoverLabel }}</span>
       <span class="image-info-data data">Sol {{ current.sol }}</span>
       <span class="mars-icon" aria-hidden="true"></span>
       <span class="image-info-data data">{{ current.camera.name }}</span>
-<!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
+      <span class="mars-icon" aria-hidden="true"></span>
+      <span class="image-info-data data">{{ current.id }}</span>
+      <!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
+      <div class="click-to-view">Click image for full size</div>
     </div>
     <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
     <button class="nav next" @click="next" aria-label="Next slide">›</button>
   </section>
   <!-- Manifests -->
-  <section class="main-manifests-section" v-if="status === 'ready'">
+  <section class="main-manifests-section" v-if="status === 'ready' && activeAction === 'home'">
     <span class="main-manifest active">
       <span class="rover-active-heading">Active Rovers</span>
       <!-- Perseverance -->
-      <span class="rover active" v-if="nasaRoverData.perseverance" @click="activeRover='perseverance'">
+      <span
+        class="rover active"
+        v-if="nasaRoverData.perseverance"
+        :class="{ selected: activeRover === 'perseverance' }"
+        @click="activeRover='perseverance'"
+      >
         <div class="rover-data heading">{{ nasaRoverData.perseverance.name }}</div>
         <div class="rover-data info status active">
           <span class="info-left">Status: </span>
@@ -86,7 +121,12 @@
         </div>
       </span>
       <!-- Curiosity -->
-      <span class="rover active" v-if="nasaRoverData.curiosity" @click="activeRover='curiosity'">
+      <span
+        class="rover active"
+        v-if="nasaRoverData.curiosity"
+        :class="{ selected: activeRover === 'curiosity' }"
+        @click="activeRover='curiosity'"
+      >
         <div class="rover-data heading">{{ nasaRoverData.curiosity.name }}</div>
         <div class="rover-data info status active">
           <span class="info-left">Status: </span>
@@ -117,7 +157,7 @@
     <span class="main-manifest inactive">
       <span class="rover-inactive-heading">Historic Rovers</span>
       <!-- Opportunity -->
-      <span class="rover" v-if="nasaRoverData.opportunity">
+      <span class="rover complete" v-if="nasaRoverData.opportunity">
         <div class="rover-data heading">{{ nasaRoverData.opportunity.name }}</div>
         <div class="rover-data info status complete">
           <span class="info-left">Status: </span>
@@ -145,7 +185,7 @@
         </div>
       </span>
       <!-- Spirit -->
-      <span class="rover" v-if="nasaRoverData.spirit">
+      <span class="rover complete" v-if="nasaRoverData.spirit">
         <div class="rover-data heading">{{ nasaRoverData.spirit.name }}</div>
         <div class="rover-data info status complete">
           <span class="info-left">Status: </span>
@@ -174,9 +214,69 @@
       </span>
     </span>
   </section>
+  <!-- Gallery -->
+  <section class="main-gallery-section" v-if="status === 'ready' && activeAction === 'gallery' && (activeGallery === 'perseverance' || activeGallery === 'curiosity')">
+    <div>
+       <span
+         class="main-gallery perseverance"
+         :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'perseverance'}"
+         role="button" tabindex="0"
+         @click="activeGallery = 'perseverance', activeRover = 'perseverance'"
+         @keydown.enter="activeGallery = 'perseverance'"
+         @keydown.space.prevent="activeGallery = 'perseverance'"
+       >Perseverance Photos</span>
+
+      <span
+        class="main-gallery curiosity"
+        :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'curiosity'}"
+        role="button" tabindex="0"
+        @click="activeGallery = 'curiosity' , activeRover = 'curiosity'"
+        @keydown.enter="activeGallery = 'curiosity'"
+        @keydown.space.prevent="activeGallery = 'curiosity'"
+      >Curiosity Photos</span>
+    </div>
+
+    <div class="main-gallery-wrapper">
+      <div v-if="nasaRoverData[activeRover]?.recentPhotos?.length"
+           class="main-gallery-images">
+        <div
+          class="gallery-item"
+          v-for="p in nasaRoverData[activeRover].recentPhotos[0].photos"
+          :key="p.id"
+        >
+
+          <div class="gallery-item-image-info">
+            <span class="gallery-item-image-info-data">Sol {{ p.sol }}</span>
+            <span class="mars-icon" aria-hidden="true"></span>
+            <span class="gallery-item-image-info-data">{{ p.camera.name }}</span>
+            <span class="mars-icon" aria-hidden="true"></span>
+            <span class="gallery-item-image-info-data">{{ p.id }}</span>
+            <div class="click-to-view">Click image for full size</div>
+          </div>
+          <img :src="p.img_src" :alt="`Sol ${p.sol} — ${p.camera.full_name}`" class="gallery-image clickable" @click="openPhoto(p)">
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Image Modal -->
+  <div
+    v-if="isModalOpen && modalPhoto"
+    class="modal-backdrop"
+    @click.self="closeModal"
+    @keydown.esc="closeModal"
+    tabindex="-1"
+    ref="modalBackdrop"
+  >
+    <figure class="modal">
+      <img :src="modalPhoto.img_src" :alt="`Sol ${modalPhoto.sol} – ${modalPhoto?.camera?.full_name || modalPhoto?.camera?.name || ''}`">
+      <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
+    </figure>
+  </div>
 
   <script>
-    const { createApp, ref, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
     createApp({
       setup() {
@@ -187,12 +287,46 @@
         const errorMsgValue = ref('');
         const nasaRoverData = ref({});
         const activeRover = ref('perseverance');
+        const activeAction = ref('gallery');
+        const activeGallery = ref('perseverance');
 
         // Slideshow
         const AUTOPLAY_MS = 5000;
         const index = ref(0);
         let timer = null;
 
+        const isModalOpen = ref(false);
+        const modalPhoto  = ref(null);
+        const modalBackdrop = ref(null);
+
+        function openPhoto(photo) {
+          if (!photo) return;
+          modalPhoto.value = photo;
+          isModalOpen.value = true;
+          nextTick(() => modalBackdrop.value?.focus());
+        }
+        function closeModal() {
+          isModalOpen.value = false;
+          modalPhoto.value = null;
+        }
+
+        function openRandomPhoto() {
+          // pool from both active rovers; fallbacks if needed
+          const pool = [
+            ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
+            ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
+          ];
+          if (pool.length === 0) {
+            errorMsgValue.value = 'No photos available to pick at random.';
+            return;
+          }
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          // also set UI state if you want the header to show as active
+          // activeAction.value = 'random';  // only if you keep activeAction
+          openPhoto(pick);
+        }
+
+        // Slide show
         const slides = Vue.computed(() =>
           nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
         );
@@ -322,9 +456,13 @@
           status, errorMsgValue,
           // Data
           nasaRoverData,
-          // Dlideshow
-          activeRover, activeRoverLabel, current, next, prev, start, stop,
-          // Utils
+          // Slideshow
+          activeRover, activeRoverLabel, current, next, prev, start, stop, activeGallery,
+          // Header selection (underline)
+          activeAction,
+          // Modal
+          isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
+          // Format date
           fmtDate,
         };
       }
