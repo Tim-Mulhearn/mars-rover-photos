@@ -1,6 +1,6 @@
 # Mars Rover Photos
 
-Free to use.
+Built with vue 3, free to use.
 
 ## What I built
 - Single-page Vue 3 app that shows Mars rover images.
