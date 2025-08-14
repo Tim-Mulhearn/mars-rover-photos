@@ -15,5 +15,5 @@ Free to use.
 - Simple, responsive layout.
 
 ## Run
-- Add your NASA API key in `index.html` (search for `api_key`): const api_key = 'ADD-YOUR-API-KEY-HERE';.
+- Add your NASA API key in `index.html` (search for `api_key`): const api_key = 'DEMO_KEY'
 - Open `index.html` in any browser (or use a simple local server). No build step required.
