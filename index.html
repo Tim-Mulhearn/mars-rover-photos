@@ -68,7 +68,6 @@
     :style="{ backgroundImage: `url(${current.img_src})` }"
     @mouseenter="stop"
     @mouseleave="start"
-    @click="openPhoto(current)"
   >
     <div class="image-info">
       <span class="image-info-data title">{{ activeRoverLabel }}</span>
@@ -77,9 +76,9 @@
       <span class="image-info-data data">{{ current.camera.name }}</span>
       <span class="mars-icon" aria-hidden="true"></span>
       <span class="image-info-data data">{{ current.id }}</span>
-      <!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
-      <div class="click-to-view">Click image for full size</div>
+<!--      <span class="image-info-data data">{{ fmtDate(current.earth_date) }}</span>-->
     </div>
+    <span class="image-info-view" @click="openPhoto(current)"><img src="images/view.svg">View Image</span>
     <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
     <button class="nav next" @click="next" aria-label="Next slide">›</button>
   </section>
@@ -251,9 +250,9 @@
             <span class="gallery-item-image-info-data">{{ p.camera.name }}</span>
             <span class="mars-icon" aria-hidden="true"></span>
             <span class="gallery-item-image-info-data">{{ p.id }}</span>
-            <div class="click-to-view">Click image for full size</div>
+            <span class="image-info-view" @click="openPhoto(p)"><img src="images/view.svg">View Image</span>
           </div>
-          <img :src="p.img_src" :alt="`Sol ${p.sol} — ${p.camera.full_name}`" class="gallery-image clickable" @click="openPhoto(p)">
+          <img :src="p.img_src" :alt="`Sol ${p.sol} — ${p.camera.full_name}`" class="gallery-image clickable">
 
         </div>
       </div>
@@ -272,6 +271,15 @@
     <figure class="modal">
       <img :src="modalPhoto.img_src" :alt="`Sol ${modalPhoto.sol} – ${modalPhoto?.camera?.full_name || modalPhoto?.camera?.name || ''}`">
       <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
+      <figcaption class="modal-caption">
+        <span>Sol: {{ modalPhoto.sol }}</span>
+        <span class="mars-icon" aria-hidden="true"></span>
+        <span>Id: {{ modalPhoto.id }}</span>
+        <span class="mars-icon" aria-hidden="true"></span>
+        <span>Camera: {{ modalPhoto?.camera?.full_name }}</span>
+        <span class="mars-icon" aria-hidden="true"></span>
+        <span>Date: {{ fmtDate(current.earth_date) }}</span>
+      </figcaption>
     </figure>
   </div>
 
@@ -287,7 +295,7 @@
         const errorMsgValue = ref('');
         const nasaRoverData = ref({});
         const activeRover = ref('perseverance');
-        const activeAction = ref('gallery');
+        const activeAction = ref('home');
         const activeGallery = ref('perseverance');
 
         // Slideshow
