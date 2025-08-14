@@ -1,0 +1,4 @@
+<!-- images/view.svg (mask-friendly solid) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true" focusable="false">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 5c6.5 0 10 7 10 7s-3.5 7-10 7S2 12 2 12s3.5-7 10-7Zm0 5.2a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6Z"></path>
+</svg>
