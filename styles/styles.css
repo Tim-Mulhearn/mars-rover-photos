@@ -371,7 +371,7 @@ main {
 .modal {
   position: relative;
   max-width: 96vw; max-height: 96vh;
-  border-radius: var(--border-radius);
+  /*border-radius: var(--border-radius);*/
   border: 1px solid var(--border);
   background: var(--panel-bg);
 }
