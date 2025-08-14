@@ -1,33 +1,6 @@
 * { box-sizing: border-box; }
 
-/* THEME (old palette kept for reference) */
-/*:root {*/
-/*  --main-body-background: #0B0E13;*/
-/*  --font-color: #E8F0FF;*/
-/*  --font-color-muted: #B3C2D6;*/
-/*  --heading-color: #F5FAFF;*/
-/*  --font-weight-normal: 300;*/
-/*  --font-weight-bold: 600;*/
-/*  --font-weight-very-bold: 800;*/
-/*  --font-size: 1rem;*/
-/*  --font-size-small: 0.8rem;*/
-/*  --font-size-large: 1.3rem;*/
-/*  --font-size-very-large: 1.6rem;*/
-/*  --section-bottom: 1rem;*/
-/*  --border-radius: 10px;*/
-/*  --border: #1E2A3A;*/
-/*  --border-strong: #2B3B50;*/
-/*  --panel-bg: #0F141C;*/
-/*  --panel-bg-inactive: #0A0E15;*/
-/*  --overlay-bg: rgba(3,6,12,.78);*/
-/*  --accent: #7FB6FF;*/
-/*  --accent-contrast: #0A0E15;*/
-/*  --error: #FF5A6E;*/
-/*  --rover-status-background-active: #111925;*/
-/*  --rover-status-text: #CFE0FF;*/
-/*  --rover-status-background-complete: lightslategrey;*/
-/*}*/
-
+/* Main - REDS/BROWNS */
 :root {
   --main-body-background: #120B0C;
 
@@ -62,6 +35,151 @@
   --rover-status-background-complete: lightslategrey;
   --rover-status-text: #F6C9BE;
 }
+
+/* REDISH */
+/*:root {*/
+/*  --main-body-background: #0F0606;*/
+
+/*  --font-color: #FFECEA;*/
+/*  --font-color-muted: #F0B5AF;*/
+/*  --heading-color: #FFD8D2;*/
+
+/*  --font-weight-normal: 300;*/
+/*  --font-weight-bold: 600;*/
+/*  --font-weight-very-bold: 800;*/
+
+/*  --font-size: 1rem;*/
+/*  --font-size-small: 0.8rem;*/
+/*  --font-size-smallest: 0.6rem;*/
+/*  --font-size-large: 1.3rem;*/
+/*  --font-size-very-large: 1.6rem;*/
+
+/*  --section-bottom: 1rem;*/
+/*  --border-radius: 10px;*/
+/*  --border: #5A1A1A;*/
+/*  --border-strong: #7A2525;*/
+
+/*  --panel-bg: #190707;*/
+/*  --panel-bg-inactive: #100404;*/
+/*  --overlay-bg: rgba(32, 8, 8, .82);*/
+
+/*  --accent: #FF3B30;*/
+/*  --accent-contrast: #1A0505;*/
+/*  --error: #FF2D55;*/
+
+/*  --rover-status-background-active: #2A0C0D;*/
+/*  --rover-status-background-complete: lightslategrey;*/
+/*  --rover-status-text: #FFD1CC;*/
+/*}*/
+
+/* PURPLISH */
+/*:root {*/
+/*  --main-body-background: #0E090B;*/
+
+/*  --font-color: #FFF0FA;*/
+/*  --font-color-muted: #F2B6D0;*/
+/*  --heading-color: #FFE0F0;*/
+
+/*  --font-weight-normal: 300;*/
+/*  --font-weight-bold: 600;*/
+/*  --font-weight-very-bold: 800;*/
+
+/*  --font-size: 1rem;*/
+/*  --font-size-small: 0.8rem;*/
+/*  --font-size-smallest: 0.6rem;*/
+/*  --font-size-large: 1.3rem;*/
+/*  --font-size-very-large: 1.6rem;*/
+
+/*  --section-bottom: 1rem;*/
+/*  --border-radius: 10px;*/
+/*  --border: #3F1428;*/
+/*  --border-strong: #5A1A39;*/
+
+/*  --panel-bg: #160B12;*/
+/*  --panel-bg-inactive: #10070D;*/
+/*  --overlay-bg: rgba(32,12,24,.80);*/
+
+/*  --accent: #FF6E8A;*/
+/*  --accent-contrast: #19080C;*/
+/*  --error: #FF3B5E;*/
+
+/*  --rover-status-background-active: #240F19;*/
+/*  --rover-status-background-complete: #7B7F8A;*/
+/*  --rover-status-text: #FFD6E4;*/
+/*}*/
+
+/* BLUEISH */
+/*:root {*/
+/*  --main-body-background: #071017;*/
+
+/*  --font-color: #EAF9FF;*/
+/*  --font-color-muted: #BDE2F0;*/
+/*  --heading-color: #DDF4FF;*/
+
+/*  --font-weight-normal: 300;*/
+/*  --font-weight-bold: 600;*/
+/*  --font-weight-very-bold: 800;*/
+
+/*  --font-size: 1rem;*/
+/*  --font-size-small: 0.8rem;*/
+/*  --font-size-smallest: 0.6rem;*/
+/*  --font-size-large: 1.3rem;*/
+/*  --font-size-very-large: 1.6rem;*/
+
+/*  --section-bottom: 1rem;*/
+/*  --border-radius: 10px;*/
+/*  --border: #183241;*/
+/*  --border-strong: #20475D;*/
+
+/*  --panel-bg: #0A151D;*/
+/*  --panel-bg-inactive: #071018;*/
+/*  --overlay-bg: rgba(7,16,23,.82);*/
+
+/*  --accent: #2EE7FF;*/
+/*  --accent-contrast: #03151A;*/
+/*  --error: #FF5C6C;*/
+
+/*  --rover-status-background-active: #0E202A;*/
+/*  --rover-status-background-complete: #688393;*/
+/*  --rover-status-text: #D7F7FF;*/
+/*}*/
+
+/*!* GREENISH *!*/
+/*:root {*/
+/*  --main-body-background: #0E1210;*/
+
+/*  --font-color: #EAFBF4;*/
+/*  --font-color-muted: #BFE8D9;*/
+/*  --heading-color: #D7FFF4;*/
+
+/*  --font-weight-normal: 300;*/
+/*  --font-weight-bold: 600;*/
+/*  --font-weight-very-bold: 800;*/
+
+/*  --font-size: 1rem;*/
+/*  --font-size-small: 0.8rem;*/
+/*  --font-size-smallest: 0.6rem;*/
+/*  --font-size-large: 1.3rem;*/
+/*  --font-size-very-large: 1.6rem;*/
+
+/*  --section-bottom: 1rem;*/
+/*  --border-radius: 10px;*/
+/*  --border: #1E3A33;*/
+/*  --border-strong: #285047;*/
+
+/*  --panel-bg: #0F1714;*/
+/*  --panel-bg-inactive: #0A1210;*/
+/*  --overlay-bg: rgba(10,20,18,.82);*/
+
+/*  --accent: #2DE2C5;*/
+/*  --accent-contrast: #051613;*/
+/*  --error: #FF6E7A;*/
+
+/*  --rover-status-background-active: #11221D;*/
+/*  --rover-status-background-complete: #6F848F;*/
+/*  --rover-status-text: #D6FFF5;*/
+/*}*/
+
 
 /* BASE */
 body {
@@ -400,7 +518,7 @@ main {
   margin: 1rem;
   text-align: center;
   font-size: var(--font-size);
-  background: var(--overlay-bg);
+  /*background: var(--overlay-bg);*/
 }
 
 /* Modal nav arrows (reuse hero look) */
