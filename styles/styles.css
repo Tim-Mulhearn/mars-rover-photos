@@ -32,7 +32,7 @@
   --error: #FF5A5F;
 
   --rover-status-background-active: #241112;
-  --rover-status-background-complete: lightslategrey;
+  --rover-status-background-complete: var(--accent);
   --rover-status-text: #F6C9BE;
 }
 
@@ -68,7 +68,7 @@
 /*  --error: #FF2D55;*/
 
 /*  --rover-status-background-active: #2A0C0D;*/
-/*  --rover-status-background-complete: lightslategrey;*/
+/*  --rover-status-background-complete: var(--accent);*/
 /*  --rover-status-text: #FFD1CC;*/
 /*}*/
 
@@ -104,7 +104,7 @@
 /*  --error: #FF3B5E;*/
 
 /*  --rover-status-background-active: #240F19;*/
-/*  --rover-status-background-complete: #7B7F8A;*/
+/*  --rover-status-background-complete: var(--accent);*/
 /*  --rover-status-text: #FFD6E4;*/
 /*}*/
 
@@ -140,7 +140,7 @@
 /*  --error: #FF5C6C;*/
 
 /*  --rover-status-background-active: #0E202A;*/
-/*  --rover-status-background-complete: #688393;*/
+/*  --rover-status-background-complete: var(--accent);*/
 /*  --rover-status-text: #D7F7FF;*/
 /*}*/
 
@@ -176,7 +176,7 @@
 /*  --error: #FF6E7A;*/
 
 /*  --rover-status-background-active: #11221D;*/
-/*  --rover-status-background-complete: #6F848F;*/
+/*  --rover-status-background-complete: var(--accent);*/
 /*  --rover-status-text: #D6FFF5;*/
 /*}*/
 
@@ -457,7 +457,11 @@ main {
   cursor: not-allowed;
 }
 
-.rover-data.complete .info-right { background: var(--rover-status-background-complete); }
+.rover-data.complete .info-right {
+  background: var(--rover-status-background-complete);
+  /*background: var(--accent-color);*/
+}
+
 
 .info-left { margin-right: auto; text-align: left; }
 .info-right { margin-left: auto; text-align: right; }
