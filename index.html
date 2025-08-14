@@ -80,7 +80,7 @@
 
     <!-- View Image opens modal slideshow with the same slides -->
     <span class="image-info-view" @click="openPhoto(current, slides)">
-      <img src="images/view.svg" alt="" aria-hidden="true">View Image
+      <img src="images/view.svg" alt="" aria-hidden="true">View
     </span>
 
     <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
@@ -260,9 +260,8 @@
             <span class="gallery-item-image-info-data">{{ p.camera.name }}</span>
             <span class="mars-icon" aria-hidden="true"></span>
             <span class="gallery-item-image-info-data">{{ p.id }}</span>
-
             <span class="image-info-view" @click="openPhoto(p, nasaRoverData[activeRover].recentPhotos[0].photos)">
-              <img src="images/view.svg" alt="" aria-hidden="true">View Image
+              <img src="images/view.svg" alt="" aria-hidden="true">View
             </span>
           </div>
 
