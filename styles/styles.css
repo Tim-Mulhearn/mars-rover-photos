@@ -286,7 +286,8 @@ main {
 
 .gallery-item .image-info-view {
   position: absolute;
-  bottom: 3.375rem;
+  /*bottom: 3.375rem;*/
+  bottom: 3.1875rem;
   right: 0;
   padding: 0.5rem;
   font-size: var(--font-size-small);
@@ -564,7 +565,8 @@ main {
   .gallery-item-image-info { font-size: var(--font-size-small); }
 
   .gallery-item-image-info .image-info-view {
-    bottom: 4rem;
+    /*bottom: 4rem;*/
+    bottom: 3.9375rem;
     margin-right: 0;
   }
 }
@@ -594,7 +596,9 @@ main {
   .gallery-item-image-info, .image-info { font-size: var(--font-size-small); }
 
   .gallery-item .image-info-view {
-    top: -2.25rem;
+    padding: 0.75rem;
+    /*top: -2.25rem;*/
+    top: -1.4375rem;
     bottom: 5rem;
   }
 
