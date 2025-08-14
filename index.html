@@ -11,7 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<!--  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>-->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body>
 <main id="app" v-cloak>
@@ -304,349 +305,349 @@
     </figure>
   </div>
   <div class="nasa-information" v-if="status === 'ready'">Rover data from: https://api.nasa.gov/</div>
-  <script>
-    const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
+</main>
+<script>
+  const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
 
-    createApp({
-      setup() {
-        const ONE_DAY = 24 * 60 * 60 * 1_000;
+  createApp({
+    setup() {
+      const ONE_DAY = 24 * 60 * 60 * 1_000;
 
-        // State
-        const status = ref('loading');
-        const errorMsgValue = ref('');
-        const nasaRoverData = ref({});
-        const activeRover = ref('perseverance');
-        const activeAction = ref('home');
-        const activeGallery = ref('perseverance');
+      // State
+      const status = ref('loading');
+      const errorMsgValue = ref('');
+      const nasaRoverData = ref({});
+      const activeRover = ref('perseverance');
+      const activeAction = ref('home');
+      const activeGallery = ref('perseverance');
 
-        // Hero slideshow
-        const AUTOPLAY_MS = 5000;
-        const index = ref(0);
-        let timer = null;
+      // Hero slideshow
+      const AUTOPLAY_MS = 5000;
+      const index = ref(0);
+      let timer = null;
 
-        // Modal slideshow
-        const MODAL_AUTOPLAY_MS = 5000;
-        const isModalOpen = ref(false);
-        const modalPhoto  = ref(null);
-        const modalBackdrop = ref(null);
-        const modalSlides = ref([]);
-        const modalIndex  = ref(0);
-        let modalTimer = null;
-        const wasPlaying = ref(false);
+      // Modal slideshow
+      const MODAL_AUTOPLAY_MS = 5000;
+      const isModalOpen = ref(false);
+      const modalPhoto  = ref(null);
+      const modalBackdrop = ref(null);
+      const modalSlides = ref([]);
+      const modalIndex  = ref(0);
+      let modalTimer = null;
+      const wasPlaying = ref(false);
 
-        // ---- helpers for timers ----
-        function start() {
-          stop();
-          if (slides.value.length > 1 && !isModalOpen.value) {
-            timer = setInterval(next, AUTOPLAY_MS);
-          }
+      // ---- helpers for timers ----
+      function start() {
+        stop();
+        if (slides.value.length > 1 && !isModalOpen.value) {
+          timer = setInterval(next, AUTOPLAY_MS);
         }
-        function stop() {
-          if (timer) { clearInterval(timer); timer = null; }
+      }
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+      }
+      function startGuarded() {
+        if (!isModalOpen.value) start();
+      }
+
+      function startModal() {
+        stopModal();
+        if (modalSlides.value.length > 1) {
+          modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
         }
-        function startGuarded() {
-          if (!isModalOpen.value) start();
+      }
+      function stopModal() {
+        if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
+      }
+
+      // ---- open/close modal & wiring collection ----
+      function normalizeCollection(col) {
+        if (Array.isArray(col)) return col;
+        if (col && Array.isArray(col.value)) return col.value;
+        return [];
+      }
+
+      function openPhoto(photo, collection) {
+        if (!photo) return;
+
+        // seed modal slides
+        const col = normalizeCollection(collection);
+        modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
+
+        // find index for clicked/hero photo
+        const idx = modalSlides.value.findIndex(p => p.id === photo.id);
+        modalIndex.value = idx >= 0 ? idx : 0;
+        modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
+
+        // pause hero if it was playing
+        wasPlaying.value = !!timer;
+        stop();
+
+        isModalOpen.value = true;
+        nextTick(() => modalBackdrop.value?.focus());
+      }
+
+      function closeModal() {
+        isModalOpen.value = false;
+        modalPhoto.value = null;
+        stopModal();
+        if (wasPlaying.value && slides.value.length > 1) start();
+      }
+
+      function modalNext(){
+        if (!modalSlides.value.length) return;
+        modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
+        modalPhoto.value = modalSlides.value[modalIndex.value];
+      }
+      function modalPrev(){
+        if (!modalSlides.value.length) return;
+        modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
+        modalPhoto.value = modalSlides.value[modalIndex.value];
+      }
+
+      function openRandomPhoto() {
+        const pool = [
+          ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
+          ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
+        ];
+        if (pool.length === 0) {
+          errorMsgValue.value = 'No photos available to pick at random.';
+          return;
         }
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        openPhoto(pick, pool);
+        // activeAction.value = 'random';
+      }
 
-        function startModal() {
-          stopModal();
-          if (modalSlides.value.length > 1) {
-            modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
-          }
-        }
-        function stopModal() {
-          if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
-        }
+      // Hero slides
+      const slides = computed(() =>
+        nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+      );
+      const current = computed(() => slides.value[index.value] ?? null);
+      const activeRoverLabel = computed(
+        () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
+      );
 
-        // ---- open/close modal & wiring collection ----
-        function normalizeCollection(col) {
-          if (Array.isArray(col)) return col;
-          if (col && Array.isArray(col.value)) return col.value;
-          return [];
-        }
+      function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
+      function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
 
-        function openPhoto(photo, collection) {
-          if (!photo) return;
+      // When slides change, (re)start hero only if modal is closed
+      watch(slides, (arr)=>{
+        index.value = 0;
+        if (arr.length > 1 && !isModalOpen.value) start(); else stop();
+      });
 
-          // seed modal slides
-          const col = normalizeCollection(collection);
-          modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
-
-          // find index for clicked/hero photo
-          const idx = modalSlides.value.findIndex(p => p.id === photo.id);
-          modalIndex.value = idx >= 0 ? idx : 0;
-          modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
-
-          // pause hero if it was playing
-          wasPlaying.value = !!timer;
-          stop();
-
-          isModalOpen.value = true;
-          nextTick(() => modalBackdrop.value?.focus());
-        }
-
-        function closeModal() {
-          isModalOpen.value = false;
-          modalPhoto.value = null;
-          stopModal();
+      // Keep hero paused while modal is open; run modal autoplay while open
+      watch(isModalOpen, (open) => {
+        if (open) {
+          stop();       // hero off
+          startModal(); // modal on
+        } else {
+          stopModal();  // modal off
           if (wasPlaying.value && slides.value.length > 1) start();
         }
+      });
 
-        function modalNext(){
-          if (!modalSlides.value.length) return;
-          modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
-          modalPhoto.value = modalSlides.value[modalIndex.value];
+      // Keyboard nav (modal has priority)
+      const keyHandler = (e) => {
+        if (status.value !== 'ready') return;
+
+        if (isModalOpen.value) {
+          if (e.key === 'ArrowRight') modalNext();
+          if (e.key === 'ArrowLeft')  modalPrev();
+          if (e.key === 'Escape')     closeModal();
+          return;
         }
-        function modalPrev(){
-          if (!modalSlides.value.length) return;
-          modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
-          modalPhoto.value = modalSlides.value[modalIndex.value];
-        }
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'ArrowLeft')  prev();
+      };
+      onMounted(() => window.addEventListener('keydown', keyHandler));
+      onUnmounted(() => window.removeEventListener('keydown', keyHandler));
 
-        function openRandomPhoto() {
-          const pool = [
-            ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
-            ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
-          ];
-          if (pool.length === 0) {
-            errorMsgValue.value = 'No photos available to pick at random.';
-            return;
-          }
-          const pick = pool[Math.floor(Math.random() * pool.length)];
-          openPhoto(pick, pool);
-          // activeAction.value = 'random';
-        }
+      // Cache utils
+      function cacheData(key, value, ttlMs) {
+        localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
+      }
 
-        // Hero slides
-        const slides = computed(() =>
-          nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
-        );
-        const current = computed(() => slides.value[index.value] ?? null);
-        const activeRoverLabel = computed(
-          () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
-        );
-
-        function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
-        function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
-
-        // When slides change, (re)start hero only if modal is closed
-        watch(slides, (arr)=>{
-          index.value = 0;
-          if (arr.length > 1 && !isModalOpen.value) start(); else stop();
-        });
-
-        // Keep hero paused while modal is open; run modal autoplay while open
-        watch(isModalOpen, (open) => {
-          if (open) {
-            stop();       // hero off
-            startModal(); // modal on
-          } else {
-            stopModal();  // modal off
-            if (wasPlaying.value && slides.value.length > 1) start();
-          }
-        });
-
-        // Keyboard nav (modal has priority)
-        const keyHandler = (e) => {
-          if (status.value !== 'ready') return;
-
-          if (isModalOpen.value) {
-            if (e.key === 'ArrowRight') modalNext();
-            if (e.key === 'ArrowLeft')  modalPrev();
-            if (e.key === 'Escape')     closeModal();
-            return;
-          }
-          if (e.key === 'ArrowRight') next();
-          if (e.key === 'ArrowLeft')  prev();
-        };
-        onMounted(() => window.addEventListener('keydown', keyHandler));
-        onUnmounted(() => window.removeEventListener('keydown', keyHandler));
-
-        // Cache utils
-        function cacheData(key, value, ttlMs) {
-          localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
-        }
-
-        function checkCachedData(key) {
-          const raw = localStorage.getItem(key);
-          if (!raw) return false;
-          try {
-            const { value, expires } = JSON.parse(raw);
-            if (!Number.isFinite(expires) || Date.now() > expires) {
-              localStorage.removeItem(key);
-              return false;
-            }
-            console.log('Using cache data');
-            nasaRoverData.value = value;
-            status.value = 'ready';
-            errorMsgValue.value = '';
-            return true;
-          } catch {
+      function checkCachedData(key) {
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+        try {
+          const { value, expires } = JSON.parse(raw);
+          if (!Number.isFinite(expires) || Date.now() > expires) {
             localStorage.removeItem(key);
             return false;
           }
-        }
-
-        // ---------- Netlify helper (for proxy mode) ----------
-        async function api(type, { rover = 'perseverance', sol } = {}) {
-          const url = `/.netlify/functions/nasa?type=${encodeURIComponent(type)}&rover=${encodeURIComponent(rover)}${sol != null ? `&sol=${encodeURIComponent(sol)}` : ''}`;
-          const res = await fetch(url, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
-          return res.json();
-        }
-
-        // =====================================================
-        // =============== DATA FETCH (DIRECT) =================
-        // =====================================================
-        // Active by default: uses NASA's public DEMO_KEY
-        // Replace with your own key for higher limits, OR switch to the Netlify version below.
-        // async function getNasaRoverData() {
-        //   status.value = 'loading';
-        //   errorMsgValue.value = '';
-        //   try {
-        //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
-        //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
-        //     const results = {};
-        //     const DAYS = 7;
-        //     const PER_DAY = 3;
-        //
-        //     for (const rover of rovers) {
-        //       // Manifest
-        //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
-        //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
-        //       const res = await fetch(manifestUrl);
-        //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        //       const json = await res.json();
-        //       const manifest = { [rover]: json.photo_manifest ?? json };
-        //
-        //       delete manifest[rover].photos;
-        //
-        //       let aggregated = [];
-        //       if (rover === 'perseverance' || rover === 'curiosity') {
-        //         const maxSol = Number(manifest[rover].max_sol) || 0;
-        //         let daysFetched = 0;
-        //         for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
-        //           const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
-        //           solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
-        //           const r = await fetch(solUrl);
-        //           if (!r.ok) continue;
-        //           const { photos = [] } = await r.json();
-        //           if (!photos.length) continue;
-        //           aggregated.push(...photos.slice(0, PER_DAY));
-        //           daysFetched++;
-        //         }
-        //       }
-        //
-        //       const key = (manifest[rover].name || rover).toLowerCase();
-        //       const entry = {
-        //         ...manifest[rover],
-        //         recentPhotos: [
-        //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
-        //         ]
-        //       };
-        //       results[key] = entry;
-        //     }
-        //
-        //     nasaRoverData.value = results;
-        //     cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
-        //     status.value = 'ready';
-        //     if (slides.value.length > 1) start();
-        //   } catch (e) {
-        //     status.value = 'error';
-        //     errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
-        //   }
-        // }
-
-        // =====================================================
-        // ===== NETLIFY PROXY VERSION =========
-        // =====================================================
-        async function getNasaRoverData() {
-          status.value = 'loading';
+          console.log('Using cache data');
+          nasaRoverData.value = value;
+          status.value = 'ready';
           errorMsgValue.value = '';
-          try {
-            const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
-            const results = {};
-            const DAYS = 7;
-            const PER_DAY = 3;
+          return true;
+        } catch {
+          localStorage.removeItem(key);
+          return false;
+        }
+      }
 
-            for (const rover of rovers) {
-              // Manifest via Netlify Function (keeps your key server-side)
-              const manifestRes = await api('manifest', { rover });
-              const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
-              const manifest = { [rover]: manifestSrc };
+      // ---------- Netlify helper (for proxy mode) ----------
+      async function api(type, { rover = 'perseverance', sol } = {}) {
+        const url = `/.netlify/functions/nasa?type=${encodeURIComponent(type)}&rover=${encodeURIComponent(rover)}${sol != null ? `&sol=${encodeURIComponent(sol)}` : ''}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+        return res.json();
+      }
 
-              delete manifest[rover].photos;
+      // =====================================================
+      // =============== DATA FETCH (DIRECT) =================
+      // =====================================================
+      // Active by default: uses NASA's public DEMO_KEY
+      // Replace with your own key for higher limits, OR switch to the Netlify version below.
+      // async function getNasaRoverData() {
+      //   status.value = 'loading';
+      //   errorMsgValue.value = '';
+      //   try {
+      //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
+      //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+      //     const results = {};
+      //     const DAYS = 7;
+      //     const PER_DAY = 3;
+      //
+      //     for (const rover of rovers) {
+      //       // Manifest
+      //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
+      //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
+      //       const res = await fetch(manifestUrl);
+      //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      //       const json = await res.json();
+      //       const manifest = { [rover]: json.photo_manifest ?? json };
+      //
+      //       delete manifest[rover].photos;
+      //
+      //       let aggregated = [];
+      //       if (rover === 'perseverance' || rover === 'curiosity') {
+      //         const maxSol = Number(manifest[rover].max_sol) || 0;
+      //         let daysFetched = 0;
+      //         for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+      //           const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
+      //           solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
+      //           const r = await fetch(solUrl);
+      //           if (!r.ok) continue;
+      //           const { photos = [] } = await r.json();
+      //           if (!photos.length) continue;
+      //           aggregated.push(...photos.slice(0, PER_DAY));
+      //           daysFetched++;
+      //         }
+      //       }
+      //
+      //       const key = (manifest[rover].name || rover).toLowerCase();
+      //       const entry = {
+      //         ...manifest[rover],
+      //         recentPhotos: [
+      //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
+      //         ]
+      //       };
+      //       results[key] = entry;
+      //     }
+      //
+      //     nasaRoverData.value = results;
+      //     cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+      //     status.value = 'ready';
+      //     if (slides.value.length > 1) start();
+      //   } catch (e) {
+      //     status.value = 'error';
+      //     errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+      //   }
+      // }
 
-              let aggregated = [];
-              if (rover === 'perseverance' || rover === 'curiosity') {
-                const maxSol = Number(manifest[rover].max_sol) || 0;
-                let daysFetched = 0;
-                for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
-                  const photosRes = await api('photos', { rover, sol });
-                  const photos = photosRes.photos || [];
-                  if (!photos.length) continue;
-                  aggregated.push(...photos.slice(0, PER_DAY));
-                  daysFetched++;
-                }
+      // =====================================================
+      // ===== NETLIFY PROXY VERSION =========
+      // =====================================================
+      async function getNasaRoverData() {
+        status.value = 'loading';
+        errorMsgValue.value = '';
+        try {
+          const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+          const results = {};
+          const DAYS = 7;
+          const PER_DAY = 3;
+
+          for (const rover of rovers) {
+            // Manifest via Netlify Function (keeps your key server-side)
+            const manifestRes = await api('manifest', { rover });
+            const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
+            const manifest = { [rover]: manifestSrc };
+
+            delete manifest[rover].photos;
+
+            let aggregated = [];
+            if (rover === 'perseverance' || rover === 'curiosity') {
+              const maxSol = Number(manifest[rover].max_sol) || 0;
+              let daysFetched = 0;
+              for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+                const photosRes = await api('photos', { rover, sol });
+                const photos = photosRes.photos || [];
+                if (!photos.length) continue;
+                aggregated.push(...photos.slice(0, PER_DAY));
+                daysFetched++;
               }
-
-              const key = (manifest[rover].name || rover).toLowerCase();
-              const entry = {
-                ...manifest[rover],
-                recentPhotos: [
-                  { sol: manifest[rover].max_sol ?? null, photos: aggregated }
-                ]
-              };
-              results[key] = entry;
             }
 
-            nasaRoverData.value = results;
-            cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
-            status.value = 'ready';
-            if (slides.value.length > 1) start();
-          } catch (e) {
-            status.value = 'error';
-            errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+            const key = (manifest[rover].name || rover).toLowerCase();
+            const entry = {
+              ...manifest[rover],
+              recentPhotos: [
+                { sol: manifest[rover].max_sol ?? null, photos: aggregated }
+              ]
+            };
+            results[key] = entry;
           }
+
+          nasaRoverData.value = results;
+          cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+          status.value = 'ready';
+          if (slides.value.length > 1) start();
+        } catch (e) {
+          status.value = 'error';
+          errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
         }
-
-        // Date formatter
-        function fmtDate(iso, locale = 'en-GB') {
-          if (!iso) return '';
-          const [y, m, d] = iso.split('-').map(Number);
-          const dt = new Date(Date.UTC(y, m - 1, d));
-          return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
-        }
-
-        onMounted(async () => {
-          const ok = checkCachedData('nasaRoverData');
-          if (!ok) {
-            await getNasaRoverData();
-          } else {
-            if (slides.value.length > 1) start();
-          }
-        });
-
-        onUnmounted(() => { stop(); stopModal(); });
-
-        return {
-          // Status
-          status, errorMsgValue,
-          // Data
-          nasaRoverData,
-          // Hero slideshow
-          activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
-          // Header selection
-          activeAction, activeGallery,
-          // Modal slideshow
-          isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
-          modalNext, modalPrev, startModal, stopModal,
-          // Utils
-          fmtDate,
-        };
       }
-    }).mount('#app');
-  </script>
-</main>
+
+      // Date formatter
+      function fmtDate(iso, locale = 'en-GB') {
+        if (!iso) return '';
+        const [y, m, d] = iso.split('-').map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+      }
+
+      onMounted(async () => {
+        const ok = checkCachedData('nasaRoverData');
+        if (!ok) {
+          await getNasaRoverData();
+        } else {
+          if (slides.value.length > 1) start();
+        }
+      });
+
+      onUnmounted(() => { stop(); stopModal(); });
+
+      return {
+        // Status
+        status, errorMsgValue,
+        // Data
+        nasaRoverData,
+        // Hero slideshow
+        activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
+        // Header selection
+        activeAction, activeGallery,
+        // Modal slideshow
+        isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
+        modalNext, modalPrev, startModal, stopModal,
+        // Utils
+        fmtDate,
+      };
+    }
+  }).mount('#app');
+</script>
 </body>
 </html>
