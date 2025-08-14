@@ -1,48 +1,12 @@
 * { box-sizing: border-box; }
 
 /* Main - REDS/BROWNS */
-:root {
-  --main-body-background: #120B0C;
-
-  --font-color: #FFF4EE;
-  --font-color-muted: #D9B9B2;
-  --heading-color: #FFE9E3;
-
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --font-weight-very-bold: 800;
-
-  --font-size: 1rem;
-  --font-size-small: 0.8rem;
-  --font-size-smallest: 0.6rem;
-  --font-size-large: 1.3rem;
-  --font-size-very-large: 1.6rem;
-
-  --section-bottom: 1rem;
-  --border-radius: 10px;
-  --border: #3B1E1E;
-  --border-strong: #5A2A2A;
-
-  --panel-bg: #1A0F10;
-  --panel-bg-inactive: #110909;
-  --overlay-bg: rgba(24,12,12,.78);
-
-  --accent: #E35D3D;
-  --accent-contrast: #170C0C;
-  --error: #FF5A5F;
-
-  --rover-status-background-active: #241112;
-  --rover-status-background-complete: var(--accent);
-  --rover-status-text: #F6C9BE;
-}
-
-/* REDISH */
 /*:root {*/
-/*  --main-body-background: #0F0606;*/
+/*  --main-body-background: #120B0C;*/
 
-/*  --font-color: #FFECEA;*/
-/*  --font-color-muted: #F0B5AF;*/
-/*  --heading-color: #FFD8D2;*/
+/*  --font-color: #FFF4EE;*/
+/*  --font-color-muted: #D9B9B2;*/
+/*  --heading-color: #FFE9E3;*/
 
 /*  --font-weight-normal: 300;*/
 /*  --font-weight-bold: 600;*/
@@ -56,21 +20,57 @@
 
 /*  --section-bottom: 1rem;*/
 /*  --border-radius: 10px;*/
-/*  --border: #5A1A1A;*/
-/*  --border-strong: #7A2525;*/
+/*  --border: #3B1E1E;*/
+/*  --border-strong: #5A2A2A;*/
 
-/*  --panel-bg: #190707;*/
-/*  --panel-bg-inactive: #100404;*/
-/*  --overlay-bg: rgba(32, 8, 8, .82);*/
+/*  --panel-bg: #1A0F10;*/
+/*  --panel-bg-inactive: #110909;*/
+/*  --overlay-bg: rgba(24,12,12,.78);*/
 
-/*  --accent: #FF3B30;*/
-/*  --accent-contrast: #1A0505;*/
-/*  --error: #FF2D55;*/
+/*  --accent: #E35D3D;*/
+/*  --accent-contrast: #170C0C;*/
+/*  --error: #FF5A5F;*/
 
-/*  --rover-status-background-active: #2A0C0D;*/
+/*  --rover-status-background-active: #241112;*/
 /*  --rover-status-background-complete: var(--accent);*/
-/*  --rover-status-text: #FFD1CC;*/
+/*  --rover-status-text: #F6C9BE;*/
 /*}*/
+
+/* REDISH */
+:root {
+  --main-body-background: #0F0606;
+
+  --font-color: #FFECEA;
+  --font-color-muted: #F0B5AF;
+  --heading-color: #FFD8D2;
+
+  --font-weight-normal: 300;
+  --font-weight-bold: 600;
+  --font-weight-very-bold: 800;
+
+  --font-size: 1rem;
+  --font-size-small: 0.8rem;
+  --font-size-smallest: 0.6rem;
+  --font-size-large: 1.3rem;
+  --font-size-very-large: 1.6rem;
+
+  --section-bottom: 1rem;
+  --border-radius: 10px;
+  --border: #5A1A1A;
+  --border-strong: #7A2525;
+
+  --panel-bg: #190707;
+  --panel-bg-inactive: #100404;
+  --overlay-bg: rgba(32, 8, 8, .82);
+
+  --accent: #FF3B30;
+  --accent-contrast: #1A0505;
+  --error: #FF2D55;
+
+  --rover-status-background-active: #2A0C0D;
+  --rover-status-background-complete: var(--accent);
+  --rover-status-text: #FFD1CC;
+}
 
 /* PURPLISH */
 /*:root {*/
