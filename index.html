@@ -294,6 +294,8 @@
 
       <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
       <figcaption class="modal-caption">
+        <span>Rover: {{ modalPhoto.rover['name'] }}</span>
+        <span class="mars-icon" aria-hidden="true"></span>
         <span>Sol: {{ modalPhoto.sol }}</span>
         <span class="mars-icon" aria-hidden="true"></span>
         <span>Id: {{ modalPhoto.id }}</span>
