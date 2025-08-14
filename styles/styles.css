@@ -414,7 +414,11 @@ main {
   font-size: var(--font-size);
   border: 1px solid var(--border);
 }
-.rover.selected { box-shadow: 0 0 0 1px var(--accent); }
+.rover.selected {
+  box-shadow: 0 0 0 1px var(--accent);
+  border: 1px solid var(--accent);
+  transform: scale(1.01);
+}
 
 .rover-data {
   display: flex;
