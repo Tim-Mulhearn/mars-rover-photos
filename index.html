@@ -347,7 +347,6 @@
           if (timer) { clearInterval(timer); timer = null; }
         }
         function startGuarded() {
-          // don't start hero autoplay while modal is open
           if (!isModalOpen.value) start();
         }
 
@@ -363,7 +362,6 @@
 
         // ---- open/close modal & wiring collection ----
         function normalizeCollection(col) {
-          // accepts plain array or a ref/computed
           if (Array.isArray(col)) return col;
           if (col && Array.isArray(col.value)) return col.value;
           return [];
@@ -470,7 +468,6 @@
         function cacheData(key, value, ttlMs) {
           localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
         }
-
         function checkCachedData(key) {
           const raw = localStorage.getItem(key);
           if (!raw) return false;
@@ -490,25 +487,93 @@
           }
         }
 
-        // API fetch (keeps your merged 7 days x 3 photos shape)
+        // ---------- Netlify helper (for proxy mode) ----------
+        async function api(type, { rover = 'perseverance', sol } = {}) {
+          const url = `/.netlify/functions/nasa?type=${encodeURIComponent(type)}&rover=${encodeURIComponent(rover)}${sol != null ? `&sol=${encodeURIComponent(sol)}` : ''}`;
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+          return res.json();
+        }
+
+        // =====================================================
+        // =============== DATA FETCH (DIRECT) =================
+        // =====================================================
+        // Active by default: uses NASA's public DEMO_KEY
+        // Replace with your own key for higher limits, OR switch to the Netlify version below.
+        // async function getNasaRoverData() {
+        //   status.value = 'loading';
+        //   errorMsgValue.value = '';
+        //   try {
+        //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
+        //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+        //     const results = {};
+        //     const DAYS = 7;
+        //     const PER_DAY = 3;
+        //
+        //     for (const rover of rovers) {
+        //       // Manifest
+        //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
+        //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
+        //       const res = await fetch(manifestUrl);
+        //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        //       const json = await res.json();
+        //       const manifest = { [rover]: json.photo_manifest ?? json };
+        //
+        //       delete manifest[rover].photos;
+        //
+        //       let aggregated = [];
+        //       if (rover === 'perseverance' || rover === 'curiosity') {
+        //         const maxSol = Number(manifest[rover].max_sol) || 0;
+        //         let daysFetched = 0;
+        //         for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+        //           const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
+        //           solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
+        //           const r = await fetch(solUrl);
+        //           if (!r.ok) continue;
+        //           const { photos = [] } = await r.json();
+        //           if (!photos.length) continue;
+        //           aggregated.push(...photos.slice(0, PER_DAY));
+        //           daysFetched++;
+        //         }
+        //       }
+        //
+        //       const key = (manifest[rover].name || rover).toLowerCase();
+        //       const entry = {
+        //         ...manifest[rover],
+        //         recentPhotos: [
+        //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
+        //         ]
+        //       };
+        //       results[key] = entry;
+        //     }
+        //
+        //     nasaRoverData.value = results;
+        //     cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+        //     status.value = 'ready';
+        //     if (slides.value.length > 1) start();
+        //   } catch (e) {
+        //     status.value = 'error';
+        //     errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+        //   }
+        // }
+
+        // =====================================================
+        // ===== NETLIFY PROXY VERSION (COMMENTED OUT) =========
+        // =====================================================
         async function getNasaRoverData() {
           status.value = 'loading';
           errorMsgValue.value = '';
           try {
-            const api_key = 'ADD-YOUR-API-KEY-HERE';
             const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
             const results = {};
             const DAYS = 7;
             const PER_DAY = 3;
 
             for (const rover of rovers) {
-              // Manifest
-              const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
-              manifestUrl.search = new URLSearchParams({ api_key }).toString();
-              const res = await fetch(manifestUrl);
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              const json = await res.json();
-              const manifest = { [rover]: json.photo_manifest ?? json };
+              // Manifest via Netlify Function (keeps your key server-side)
+              const manifestRes = await api('manifest', { rover });
+              const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
+              const manifest = { [rover]: manifestSrc };
 
               delete manifest[rover].photos;
 
@@ -517,11 +582,8 @@
                 const maxSol = Number(manifest[rover].max_sol) || 0;
                 let daysFetched = 0;
                 for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
-                  const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
-                  solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
-                  const r = await fetch(solUrl);
-                  if (!r.ok) continue;
-                  const { photos = [] } = await r.json();
+                  const photosRes = await api('photos', { rover, sol });
+                  const photos = photosRes.photos || [];
                   if (!photos.length) continue;
                   aggregated.push(...photos.slice(0, PER_DAY));
                   daysFetched++;
@@ -547,6 +609,7 @@
             errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
           }
         }
+
 
         // Date formatter
         function fmtDate(iso, locale = 'en-GB') {
