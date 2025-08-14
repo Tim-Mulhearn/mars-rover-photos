@@ -15,5 +15,8 @@ Free to use.
 - Simple, responsive layout.
 
 ## Run
-- Add your NASA API key in `index.html` (search for `api_key`): const api_key = 'DEMO_KEY'
+- Edit index.html. 
+- Uncomment the function: DATA FETCH (DIRECT) 
+- Comment the function: NETLIFY PROXY VERSION
+- Add your NASA API key (search for `api_key`): const api_key = 'DEMO_KEY', or just use DEMO_KEY(limited calls).
 - Open `index.html` in any browser (or use a simple local server). No build step required.

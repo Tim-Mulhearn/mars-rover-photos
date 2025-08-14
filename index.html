@@ -468,6 +468,7 @@
         function cacheData(key, value, ttlMs) {
           localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
         }
+
         function checkCachedData(key) {
           const raw = localStorage.getItem(key);
           if (!raw) return false;
@@ -477,6 +478,7 @@
               localStorage.removeItem(key);
               return false;
             }
+            console.log('Using cache data');
             nasaRoverData.value = value;
             status.value = 'ready';
             errorMsgValue.value = '';
@@ -558,7 +560,7 @@
         // }
 
         // =====================================================
-        // ===== NETLIFY PROXY VERSION (COMMENTED OUT) =========
+        // ===== NETLIFY PROXY VERSION =========
         // =====================================================
         async function getNasaRoverData() {
           status.value = 'loading';
@@ -609,7 +611,6 @@
             errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
           }
         }
-
 
         // Date formatter
         function fmtDate(iso, locale = 'en-GB') {
