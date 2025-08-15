@@ -1,42 +1,6 @@
 * { box-sizing: border-box; }
 
-/* Main theme - Red/Browns */
-/*:root {*/
-/*  --main-body-background: #120B0C;*/
-
-/*  --font-color: #FFF4EE;*/
-/*  --font-color-muted: #D9B9B2;*/
-/*  --heading-color: #FFE9E3;*/
-
-/*  --font-weight-normal: 300;*/
-/*  --font-weight-bold: 600;*/
-/*  --font-weight-very-bold: 800;*/
-
-/*  --font-size: 1rem;*/
-/*  --font-size-small: 0.8rem;*/
-/*  --font-size-smallest: 0.6rem;*/
-/*  --font-size-large: 1.3rem;*/
-/*  --font-size-very-large: 1.6rem;*/
-
-/*  --section-bottom: 1rem;*/
-/*  --border-radius: 10px;*/
-/*  --border: #3B1E1E;*/
-/*  --border-strong: #5A2A2A;*/
-
-/*  --panel-bg: #1A0F10;*/
-/*  --panel-bg-inactive: #110909;*/
-/*  --overlay-bg: rgba(24,12,12,.78);*/
-
-/*  --accent: #E35D3D;*/
-/*  --accent-contrast: #170C0C;*/
-/*  --error: #FF5A5F;*/
-
-/*  --rover-status-background-active: #241112;*/
-/*  --rover-status-background-complete: var(--accent);*/
-/*  --rover-status-text: #F6C9BE;*/
-/*}*/
-
-/* Red theme */
+/* Main theme - Red */
 :root {
   --main-body-background: #0F0606;
 
@@ -546,14 +510,20 @@ main {
   z-index: 1;
 }
 
+.nav.prev,
+.nav.next {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 4rem;
+}
+
 .modal .prev{
   left:.5rem;
-  font-size: var(--font-size-very-large);
 }
 
 .modal .next{
   right:.5rem;
-  font-size: var(--font-size-very-large);
 }
 
 /* Footer */
@@ -593,10 +563,10 @@ main {
 
   .image-info { width: 100%; }
 
-  .main-image-section .prev,
-  .main-image-section .next { font-size: var(--font-size-small); }
-  .main-image-section .prev { left: 0.6rem; }
-  .main-image-section .next { right: 0.6rem; }
+  /*.main-image-section .prev,*/
+  /*.main-image-section .next { font-size: var(--font-size-small); }*/
+  /*.main-image-section .prev { left: 0.6rem; }*/
+  /*.main-image-section .next { right: 0.6rem; }*/
 
   .main-manifest,
   .main-manifest.active,
