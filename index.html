@@ -49,8 +49,9 @@
   <!-- Site description -->
   <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
     <p>
-      Showing <strong>this week’s Perseverance</strong> shots (last 7 sols; up to 7 images per sol). Switch to <strong>Curiosity</strong> below to swap the slideshow.
-      <strong>Gallery</strong> browses the same weekly set. <strong>Random Photo</strong> picks from both active rovers.
+      Showing <strong>the latest Perseverance</strong> photos (last 5 sols, up to 7 images per sol).
+      Switch to <strong>Curiosity</strong> below to swap the slideshow.
+      The <strong>Gallery</strong> browses the same weekly set, while <strong>Random Photo</strong> picks from both active rovers.
     </p>
     <p>Historic rovers: manifest data only—no images.</p>
   </section>
@@ -150,58 +151,58 @@
     </span>
     <span class="main-manifest inactive">
       <span class="rover-inactive-heading">Historic Rovers</span>
-      <span class="rover complete" v-if="nasaRoverData.opportunity">
-        <div class="rover-data heading">{{ nasaRoverData.opportunity.name }}</div>
+      <span class="rover complete">
+        <div class="rover-data heading">Opportunity</div>
         <div class="rover-data info status complete">
           <span class="info-left">Status: </span>
-          <span class="info-right">{{ nasaRoverData.opportunity.status }}</span>
+          <span class="info-right">complete</span>
         </div>
         <div class="rover-data info landed">
           <span class="info-left">Landed: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.landing_date) }}</span>
+          <span class="info-right">25 January 2004</span>
         </div>
         <div class="rover-data info launched">
           <span class="info-left">Launched: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.launch_date) }}</span>
+          <span class="info-right">07 July 2003</span>
         </div>
         <div class="rover-data info sol">
           <span class="info-left">Max Sol: </span>
-          <span class="info-right">{{ nasaRoverData.opportunity.max_sol }}</span>
+          <span class="info-right">5111</span>
         </div>
         <div class="rover-data info date">
           <span class="info-left">Max date: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.opportunity.max_date) }}</span>
+          <span class="info-right">11 June 2018</span>
         </div>
         <div class="rover-data info photos">
           <span class="info-left">Total Photos: </span>
-          <span class="info-right">{{ nasaRoverData.opportunity.total_photos }}</span>
+          <span class="info-right">198439</span>
         </div>
       </span>
-      <span class="rover complete" v-if="nasaRoverData.spirit">
-        <div class="rover-data heading">{{ nasaRoverData.spirit.name }}</div>
+      <span class="rover complete">
+        <div class="rover-data heading">Spirit</div>
         <div class="rover-data info status complete">
           <span class="info-left">Status: </span>
-          <span class="info-right">{{ nasaRoverData.spirit.status }}</span>
+          <span class="info-right">complete</span>
         </div>
         <div class="rover-data info landed">
           <span class="info-left">Landed: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.landing_date) }}</span>
+          <span class="info-right">04 January 2004</span>
         </div>
         <div class="rover-data info launched">
           <span class="info-left">Launched: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.launch_date) }}</span>
+          <span class="info-right">10 June 2003</span>
         </div>
         <div class="rover-data info sol">
           <span class="info-left">Max Sol: </span>
-          <span class="info-right">{{ nasaRoverData.spirit.max_sol }}</span>
+          <span class="info-right">2208</span>
         </div>
         <div class="rover-data info date">
           <span class="info-left">Max date: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.spirit.max_date) }}</span>
+          <span class="info-right">21 March 2010</span>
         </div>
         <div class="rover-data info photos">
           <span class="info-left">Total Photos: </span>
-          <span class="info-right">{{ nasaRoverData.spirit.total_photos }}</span>
+          <span class="info-right">124550</span>
         </div>
       </span>
     </span>
@@ -497,9 +498,9 @@
         status.value = 'loading';
         errorMsgValue.value = '';
         try {
-          const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+          const rovers  = ['perseverance', 'curiosity'];
           const results = {};
-          const DAYS = 7;
+          const DAYS = 5;
           const PER_DAY = 7;
 
           for (const rover of rovers) {
@@ -550,9 +551,9 @@
       //   errorMsgValue.value = '';
       //   try {
       //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
-      //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+      //     const rovers  = ['perseverance', 'curiosity'];
       //     const results = {};
-      //     const DAYS = 7;
+      //     const DAYS = 5;
       //     const PER_DAY = 7;
       //
       //     for (const rover of rovers) {
