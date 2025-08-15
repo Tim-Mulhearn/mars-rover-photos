@@ -15,7 +15,6 @@
 </head>
 <body>
 <main id="app" v-cloak>
-  wasplaying: {{ wasPlaying.value ? 'yes' : 'no' }}
   <section>
     <div v-if="status === 'error'" class="error-message">{{ errorMsgValue }}</div>
     <div v-if="status === 'loading'" class="loading-message">Loading rover manifests from NASA.  This can take a moment…</div>
