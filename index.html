@@ -496,6 +496,7 @@
       async function getNasaRoverData() {
         status.value = 'loading';
         errorMsgValue.value = '';
+
         try {
           const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
           const results = {};
@@ -503,34 +504,35 @@
           const PER_DAY = 3;
 
           for (const rover of rovers) {
-            // Manifest via Netlify Function (keeps your key server-side)
+            // Manifest (still needed for meta + max_sol)
             const manifestRes = await api('manifest', { rover });
             const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
             const manifest = { [rover]: manifestSrc };
 
+            // We don't want the giant manifest photos array
             delete manifest[rover].photos;
 
+            // Build from `latest_photos` only
             let aggregated = [];
-            if (rover === 'perseverance' || rover === 'curiosity') {
-              const maxSol = Number(manifest[rover].max_sol) || 0;
-              let daysFetched = 0;
-              for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
-                const photosRes = await api('photos', { rover, sol });
-                const photos = photosRes.photos || [];
-                if (!photos.length) continue;
-                aggregated.push(...photos.slice(0, PER_DAY));
-                daysFetched++;
-              }
+            const maxSol = Number(manifest[rover].max_sol) || 0;
+            let daysFetched = 0;
+
+            for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+              const latestRes = await api('latest', { rover, sol });
+              const latestPhotos = latestRes.latest_photos || [];
+              if (!latestPhotos.length) continue;
+
+              aggregated.push(...latestPhotos.slice(0, PER_DAY));
+              daysFetched++;
             }
 
             const key = (manifest[rover].name || rover).toLowerCase();
-            const entry = {
+            results[key] = {
               ...manifest[rover],
               recentPhotos: [
                 { sol: manifest[rover].max_sol ?? null, photos: aggregated }
               ]
             };
-            results[key] = entry;
           }
 
           nasaRoverData.value = results;
@@ -549,48 +551,53 @@
       // async function getNasaRoverData() {
       //   status.value = 'loading';
       //   errorMsgValue.value = '';
+      //
       //   try {
-      //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
+      //     const api_key = 'DEMO_KEY'; // rate-limited, but fine for demos
       //     const rovers  = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
       //     const results = {};
       //     const DAYS = 7;
       //     const PER_DAY = 3;
       //
       //     for (const rover of rovers) {
-      //       // Manifest
+      //       // Manifest (for meta + max_sol)
       //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
       //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
+      //
       //       const res = await fetch(manifestUrl);
       //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       //       const json = await res.json();
+      //
       //       const manifest = { [rover]: json.photo_manifest ?? json };
+      //       delete manifest[rover].photos; // drop giant array
       //
-      //       delete manifest[rover].photos;
-      //
+      //       // Build recent photos using latest_photos only
       //       let aggregated = [];
-      //       if (rover === 'perseverance' || rover === 'curiosity') {
-      //         const maxSol = Number(manifest[rover].max_sol) || 0;
-      //         let daysFetched = 0;
-      //         for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
-      //           const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
-      //           solUrl.search = new URLSearchParams({ api_key, sol: String(sol), page: '1' }).toString();
-      //           const r = await fetch(solUrl);
-      //           if (!r.ok) continue;
-      //           const { photos = [] } = await r.json();
-      //           if (!photos.length) continue;
-      //           aggregated.push(...photos.slice(0, PER_DAY));
-      //           daysFetched++;
-      //         }
+      //       const maxSol = Number(manifest[rover].max_sol) || 0;
+      //       let daysFetched = 0;
+      //
+      //       for (let sol = maxSol; sol >= 0 && daysFetched < DAYS; sol--) {
+      //         const latestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/latest_photos`);
+      //         latestUrl.search = new URLSearchParams({ api_key, sol: String(sol) }).toString();
+      //
+      //         const r = await fetch(latestUrl);
+      //         if (!r.ok) continue;
+      //
+      //         const data = await r.json();
+      //         const latestPhotos = data.latest_photos || [];
+      //         if (!latestPhotos.length) continue;
+      //
+      //         aggregated.push(...latestPhotos.slice(0, PER_DAY));
+      //         daysFetched++;
       //       }
       //
       //       const key = (manifest[rover].name || rover).toLowerCase();
-      //       const entry = {
+      //       results[key] = {
       //         ...manifest[rover],
       //         recentPhotos: [
       //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
       //         ]
       //       };
-      //       results[key] = entry;
       //     }
       //
       //     nasaRoverData.value = results;
