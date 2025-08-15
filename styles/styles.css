@@ -294,7 +294,7 @@ main {
   align-items: center;
   gap: .4em;
   line-height: 1;
-  background: var(--overlay-bg);
+  /*background: var(--overlay-bg);*/
   border-radius: 0;
   color: var(--font-color);
   cursor: pointer;
@@ -311,7 +311,7 @@ main {
 /* main section */
 .main-image-section .image-info-view {
   position: absolute;
-  top: 22rem;
+  top: 23rem;
   right: 0;
   padding: 0.5rem;
   font-size: var(--font-size);
@@ -319,7 +319,7 @@ main {
   align-items: center;
   gap: .4em;
   line-height: 1;
-  background: var(--overlay-bg);
+  /*background: var(--overlay-bg);*/
   border-radius: 0;
   color: var(--font-color);
   cursor: pointer;
@@ -327,8 +327,8 @@ main {
 }
 
 .image-info-view img {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: block;
 }
 
@@ -360,6 +360,12 @@ main {
 .image-info-data:not(.title) {
   font-size: var(--font-size);
   font-weight: var(--font-weight-normal);
+}
+
+.image-info-view {
+  height: 2rem;
+  width: 3rem;
+  align-items: center;
 }
 
 .mars-icon {
@@ -598,7 +604,7 @@ main {
   .rover { flex: 100%; }
 
   .main-image-section .image-info-view {
-    top: 16.6875rem;
+    top: 17.6875rem;
   }
 
   .main-gallery-images { grid-template-columns: repeat(2, 1fr); }
@@ -606,8 +612,9 @@ main {
   .gallery-item-image-info, .image-info { font-size: var(--font-size-small); }
 
   .gallery-item .image-info-view {
+    height: 2.1875rem;
     padding: 0.75rem;
-    top: -1.4375rem;
+    top: -2.1875rem;
     bottom: 5rem;
   }
 
