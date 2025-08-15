@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     const p = event.queryStringParameters || {};
     const rover = p.rover || 'perseverance';
     const type  = p.type  || 'manifest';
-    const solRaw = p.sol;
+    const sol   = p.sol;
 
     let url;
     if (type === 'manifest') {
@@ -26,12 +26,10 @@ exports.handler = async (event) => {
     } else if (type === 'latest') {
       url = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${encodeURIComponent(rover)}/latest_photos`);
       url.searchParams.set('api_key', API);
-      // allow optional sol for targeted "latest" lookup
-      if (solRaw != null) {
-        const s = Number.parseInt(solRaw, 10);
-        if (!Number.isFinite(s) || s < 0) return json(400, { error: 'Bad sol' });
-        url.searchParams.set('sol', String(s));
-      }
+    } else if (type === 'photos' && sol) {
+      url = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${encodeURIComponent(rover)}/photos`);
+      url.searchParams.set('sol', String(sol));
+      url.searchParams.set('api_key', API);
     } else {
       return json(400, { error: 'Bad params' });
     }
