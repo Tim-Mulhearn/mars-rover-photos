@@ -2,9 +2,10 @@
 exports.handler = async (event) => {
   try {
     const API = process.env.NASA_API_KEY;
+    const p = event.queryStringParameters || {};
 
-    // Health check: /.netlify/functions/nasa?health=1
-    if (event.queryStringParameters?.health === '1') {
+    // Health check
+    if (p.health === '1') {
       return json(200, { ok: true, hasKey: Boolean(API), node: process.version });
     }
 
@@ -14,27 +15,37 @@ exports.handler = async (event) => {
       return json(500, { error: msg });
     }
 
-    const p = event.queryStringParameters || {};
-    const rover = p.rover || 'perseverance';
-    const type  = p.type  || 'manifest';
-    const sol   = p.sol;
+    // Inputs
+    const allowedRovers = new Set(['perseverance', 'curiosity', 'opportunity', 'spirit']);
+    const rover = String(p.rover || 'perseverance').toLowerCase();
+    const type  = String(p.type  || 'manifest').toLowerCase();
+
+    if (!allowedRovers.has(rover)) {
+      return json(400, { error: 'Bad rover' });
+    }
 
     let url;
+
     if (type === 'manifest') {
       url = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${encodeURIComponent(rover)}`);
       url.searchParams.set('api_key', API);
-    } else if (type === 'latest') {
-      url = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${encodeURIComponent(rover)}/latest_photos`);
-      url.searchParams.set('api_key', API);
-    } else if (type === 'photos' && sol) {
+
+    } else if (type === 'photos') {
+      // Require a valid sol
+      const s = Number.parseInt(p.sol, 10);
+      if (!Number.isFinite(s) || s < 0) {
+        return json(400, { error: 'Bad sol' });
+      }
       url = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${encodeURIComponent(rover)}/photos`);
-      url.searchParams.set('sol', String(sol));
+      url.searchParams.set('sol', String(s));
+      url.searchParams.set('page', '1'); // explicit
       url.searchParams.set('api_key', API);
+
     } else {
-      return json(400, { error: 'Bad params' });
+      return json(400, { error: 'Bad type' });
     }
 
-    // Safe log (redacts key)
+    // Safe log (redact key)
     const safe = new URL(url.toString());
     safe.searchParams.set('api_key', '***');
     console.log('Calling NASA:', safe.toString());
