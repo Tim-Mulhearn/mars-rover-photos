@@ -15,8 +15,8 @@ Built with vue 3, free to use.
 - Simple, responsive layout.
 
 ## Run
-- Edit index.html. 
-- Uncomment the function: DATA FETCH (DIRECT) 
-- Comment the function: NETLIFY PROXY VERSION
-- Add your NASA API key (search for `api_key`): const api_key = 'DEMO_KEY', or just use DEMO_KEY(limited calls).
+- Edit index.html.
+- Comment the function: NETLIFY VERSION , NETLIFY HELPER
+- Uncomment the functions: DATA FETCH
+- Add your NASA - API key (search for `api_key`): const api_key = 'DEMO_KEY', or just use DEMO_KEY(limited calls).
 - Open `index.html` in any browser (or use a simple local server). No build step required.

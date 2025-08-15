@@ -1,6 +1,6 @@
 * { box-sizing: border-box; }
 
-/* Main - REDS/BROWNS */
+/* Main theme - Red/Browns */
 /*:root {*/
 /*  --main-body-background: #120B0C;*/
 
@@ -36,7 +36,7 @@
 /*  --rover-status-text: #F6C9BE;*/
 /*}*/
 
-/* REDISH */
+/* Red theme */
 :root {
   --main-body-background: #0F0606;
 
@@ -72,7 +72,7 @@
   --rover-status-text: #FFD1CC;
 }
 
-/* PURPLISH */
+/* Purple theme */
 /*:root {*/
 /*  --main-body-background: #0E090B;*/
 
@@ -108,7 +108,7 @@
 /*  --rover-status-text: #FFD6E4;*/
 /*}*/
 
-/* BLUEISH */
+/* Blue theme */
 /*:root {*/
 /*  --main-body-background: #071017;*/
 
@@ -144,7 +144,7 @@
 /*  --rover-status-text: #D7F7FF;*/
 /*}*/
 
-/*!* GREENISH *!*/
+/*!* Green theme *!*/
 /*:root {*/
 /*  --main-body-background: #0E1210;*/
 
@@ -180,8 +180,7 @@
 /*  --rover-status-text: #D6FFF5;*/
 /*}*/
 
-
-/* BASE */
+/* Base */
 body {
   background: var(--main-body-background);
   color: var(--font-color);
@@ -201,6 +200,7 @@ main {
   font-size: var(--font-size-large);
   color: var(--font-color-muted);
 }
+
 .error-message { color: var(--error); }
 
 /* Header and Nav */
@@ -286,7 +286,6 @@ main {
 
 .gallery-item .image-info-view {
   position: absolute;
-  /*bottom: 3.375rem;*/
   bottom: 3.1875rem;
   right: 0;
   padding: 0.5rem;
@@ -302,6 +301,14 @@ main {
   user-select: none;
 }
 
+.gallery-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* main section */
 .main-image-section .image-info-view {
   position: absolute;
   top: 23rem;
@@ -323,13 +330,6 @@ main {
   width: 1rem;
   height: 1rem;
   display: block;
-}
-
-.gallery-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
 }
 
 .view-icon {
@@ -374,8 +374,8 @@ main {
   width: 0.95em; height: 0.95em;
   margin: 0 .4em;
   background: var(--font-color);
-  -webkit-mask: url("../images/mars.svg") no-repeat center / contain;
-  mask: url("../images/mars.svg") no-repeat center / contain;
+  -webkit-mask: url("../images/mars.svg") center / contain no-repeat;
+  mask: url("../images/mars.svg") center / contain no-repeat;
   vertical-align: -0.1em;
   opacity: .9;
 }
@@ -414,6 +414,7 @@ main {
   font-size: var(--font-size);
   border: 1px solid var(--border);
 }
+
 .rover.selected {
   box-shadow: 0 0 0 1px var(--accent);
   border: 1px solid var(--accent);
@@ -459,12 +460,16 @@ main {
 
 .rover-data.complete .info-right {
   background: var(--rover-status-background-complete);
-  /*background: var(--accent-color);*/
 }
 
-
-.info-left { margin-right: auto; text-align: left; }
-.info-right { margin-left: auto; text-align: right; }
+.info-left {
+  margin-right: auto;
+  text-align: left;
+}
+.info-right {
+  margin-left: auto;
+  text-align: right;
+}
 
 /* Slideshow (hero) */
 .main-image-section .nav {
@@ -497,7 +502,6 @@ main {
 .modal {
   position: relative;
   max-width: 96vw; max-height: 96vh;
-  /*border-radius: var(--border-radius);*/
   border: 1px solid var(--border);
   background: var(--panel-bg);
 }
@@ -526,7 +530,6 @@ main {
   margin: 1rem;
   text-align: center;
   font-size: var(--font-size);
-  /*background: var(--overlay-bg);*/
 }
 
 /* Modal nav arrows (reuse hero look) */
@@ -541,8 +544,16 @@ main {
   cursor:pointer; user-select:none;
   z-index: 1;
 }
-.modal .prev{ left:.5rem;  font-size: var(--font-size-very-large); }
-.modal .next{ right:.5rem; font-size: var(--font-size-very-large); }
+
+.modal .prev{
+  left:.5rem;
+  font-size: var(--font-size-very-large);
+}
+
+.modal .next{
+  right:.5rem;
+  font-size: var(--font-size-very-large);
+}
 
 /* Footer */
 .nasa-information {
@@ -564,14 +575,16 @@ main {
   .gallery-item-image-info { font-size: var(--font-size-small); }
 
   .gallery-item-image-info .image-info-view {
-    /*bottom: 4rem;*/
     bottom: 3.9375rem;
     margin-right: 0;
   }
 }
 
 @media (max-width: 768px) {
-  main { width: 95vw; margin: 1rem auto; }
+  main {
+    width: 95vw;
+    margin: 1rem auto;
+  }
 
   .main-header .title { flex: 100% }
   .main-header .home { margin-left: 0; }
@@ -596,7 +609,6 @@ main {
 
   .gallery-item .image-info-view {
     padding: 0.75rem;
-    /*top: -2.25rem;*/
     top: -1.4375rem;
     bottom: 5rem;
   }
