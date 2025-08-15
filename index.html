@@ -503,7 +503,6 @@
           const PER_DAY = 3;
 
           for (const rover of rovers) {
-            // Manifest via Netlify Function (keeps your key server-side)
             const manifestRes = await api('manifest', { rover });
             const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
             const manifest = { [rover]: manifestSrc };
