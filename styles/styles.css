@@ -480,10 +480,12 @@ main {
 
 .modal-close {
   position: absolute; top: .25rem; right: .25rem;
-  background: var(--overlay-bg);
-  color: var(--font-color);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
+  background: none;
+  color: var(--accent);
+  font-size: 1rem;
+  border: none;
+  /*border: 1px solid var(--border);*/
+  /*border-radius: var(--border-radius);*/
   padding: .25rem .5rem;
   cursor: pointer;
 }
