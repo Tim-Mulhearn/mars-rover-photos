@@ -286,7 +286,7 @@ main {
 
 .gallery-item .image-info-view {
   position: absolute;
-  bottom: 5rem;
+  bottom: 3.5rem;
   right: 0;
   padding: 0.5rem;
   font-size: var(--font-size-small);
@@ -665,7 +665,7 @@ main {
   .gallery-item-image-info { font-size: var(--font-size-small); }
 
   .gallery-item-image-info .image-info-view {
-    bottom: 4.938rem;
+    bottom: 4rem;
     height: 29px;
     margin-right: 0;
   }
