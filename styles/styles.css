@@ -149,6 +149,8 @@ body.jezero {
 }
 
 /* Base */
+.accent-color { color: var(--accent); }
+
 body {
   background: var(--main-body-background);
   color: var(--font-color);
