@@ -244,7 +244,7 @@ main {
 
 .pager-btn, .pager-num {
   padding: .35rem .6rem;
-  border: 1px solid var(--border, #334);
+  border: 1px solid var(--accent);
   background: transparent;
   color: inherit;
   border-radius: .4rem;
