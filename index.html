@@ -345,6 +345,7 @@
     </figure>
   </div>
   <div class="nasa-information" v-if="status === 'ready'">Rover data from: https://api.nasa.gov/</div>
+  <div class="github-information" v-if="status === 'ready'"><a href="https://github.com/Tim-Mulhearn/mars-rover-photos" target="_blank"><span>GitHub</span></a></div>
 </main>
 <script>
   const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;

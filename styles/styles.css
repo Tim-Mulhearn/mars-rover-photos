@@ -654,6 +654,20 @@ main {
   font-size: var(--font-size-small);
 }
 
+.github-information {
+  padding-top: 1rem;
+  text-align: center;
+  font-size: var(--font-size-small);
+}
+
+.github-information a {
+  color: var(--font-color);
+}
+
+.github-information a:hover {
+  color: var(--accent);
+}
+
 /* Media queries */
 @media (min-width: 768px) and (max-width: 1023px) {
   main { width: 90vw; }
