@@ -252,7 +252,7 @@ main {
 }
 
 .pager-btn[disabled] { opacity: .5; cursor: not-allowed; }
-.pager-num.is-active { font-weight: 700; outline: 2px solid currentColor; }
+.pager-num.is-active { font-weight: 700; outline: 2px solid var(--accent); }
 .pager-ellipsis { padding: 0 .25rem; user-select: none; }
 
 .main-gallery.perseverance,
