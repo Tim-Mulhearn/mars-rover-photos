@@ -120,13 +120,13 @@
           <span class="info-left">Status: </span>
           <span class="info-right">{{ nasaRoverData.perseverance.status }}</span>
         </div>
+         <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.launch_date) }}</span>
+        </div>
         <div class="rover-data info landed">
           <span class="info-left">Landed: </span>
           <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.landing_date) }}</span>
-        </div>
-        <div class="rover-data info launched">
-          <span class="info-left">Launched: </span>
-          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.launch_date) }}</span>
         </div>
         <div class="rover-data info sol">
           <span class="info-left">Max Sol: </span>
