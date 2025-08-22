@@ -1,1 +1,849 @@
-<!doctype html><title>Mars</title><h1>Hello, new Mars</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mars Rover Photos</title>
+  <style>[v-cloak]{display:none}</style>
+  <link rel="icon" type="image/x-icon" href="fav-icon.ico?v=1" />
+  <link rel="stylesheet" href="styles/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body class="tharsis">
+<main id="app" v-cloak>
+  <section>
+    <div v-if="status === 'error'" class="error-message">{{ errorMsgValue }}</div>
+    <div v-if="status === 'loading'" class="loading-message">Loading rover manifests from NASA.  This can take a moment…</div>
+  </section>
+  <!-- Head section -->
+  <section class="main-header" v-if="status === 'ready'">
+    <span class="main-header title">Mars Rover Photos</span>
+    <span
+      class="main-header home"
+      :class="{ 'is-active': activeAction === 'home' }"
+      role="button" tabindex="0"
+      @click="activeAction = 'home'; activeGallery = 'perseverance';"
+      @keydown.enter="activeAction = 'home'; activeGallery = 'perseverance'"
+      @keydown.space.prevent="activeAction = 'home'; activeGallery = 'perseverance'"
+    >Home</span>
+    <span
+      class="main-header gallery"
+      :class="{ 'is-active': activeAction === 'gallery'}"
+      role="button" tabindex="0"
+      @click="activeAction = 'gallery';"
+      @keydown.enter="activeAction = 'gallery'"
+      @keydown.space.prevent="activeAction = 'gallery'"
+    >Gallery</span>
+    <span
+      class="main-header random-photo"
+      role="button" tabindex="0"
+      @click="openRandomPhoto"
+      @keydown.enter="openRandomPhoto"
+      @keydown.space.prevent="openRandomPhoto"
+    >Random</span>
+    <span
+      class="main-header theme"
+      :class="{ 'is-active': activeAction === 'theme'}"
+      role="button" tabindex="0"
+      @click="activeAction = 'theme';"
+      @keydown.enter="activeAction = 'theme'"
+      @keydown.space.prevent="activeAction = 'theme'"
+    >Theme</span>
+  </section>
+  <!-- Site description -->
+  <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
+    <p>
+      Latest photos from the most recent sol (Mars day). The slideshow starts with
+      <strong class="accent-color">Perseverance</strong>; switch to
+      <strong class="accent-color">Curiosity</strong> below.
+    </p>
+    <p class="muted" aria-live="polite">
+      Perseverance: Sol
+      <strong class="accent-color">{{ nasaRoverData.perseverance?.max_sol ?? '—' }}</strong>
+      &bull;
+      Curiosity: Sol
+      <strong class="accent-color">{{ nasaRoverData.curiosity?.max_sol ?? '—' }}</strong>
+    </p>
+    <p>
+      <strong class="accent-color">Gallery</strong> lets you browse the latest set per rover.
+      <strong class="accent-color">Random</strong> opens a random image from either active rover.
+      <strong class="accent-color">Theme</strong> changes the colour scheme.
+    </p>
+    <p>Historic rovers: manifest data only—no images.</p>
+  </section>
+  <section class="main-description" v-if="status === 'ready' && activeAction === 'gallery'">
+    <p>Select a rover to see the latest images.</p>
+  </section>
+  <section class="main-description" v-if="status === 'ready' && activeAction === 'theme'">
+    <p>Don't like the default <strong>{{ CURRENT_THEME}}</strong> theme, pick another...</p>
+  </section>
+  <!-- Hero Slideshow -->
+  <section
+    class="main-image-section"
+    v-if="status === 'ready' && current && activeAction === 'home'"
+    :style="{ backgroundImage: `url(${current.img_src})` }"
+    @mouseenter="stop"
+    @mouseleave="startGuarded"
+  >
+    <div class="image-info">
+      <span class="image-info-data title">{{ activeRoverLabel }}</span>
+      <span class="image-info-data data">Sol {{ current.sol }}</span>
+      <span class="bullet-point"> &bull; </span>
+      <span class="image-info-data data">{{ current.camera.name }}</span>
+      <!--      <span class="bullet-point"> &bull; </span>-->
+      <!--      <span class="image-info-data data">{{ current.id }}</span>-->
+    </div>
+    <!-- View Image opens modal slideshow with the same slides -->
+    <span class="image-info-view" @click="openPhoto(current, slides)">
+      <img :src="viewIcon" alt="View image" aria-hidden="true" role="button" tabindex="0">
+    </span>
+    <button class="nav prev" @click="prev" aria-label="Previous slide">‹</button>
+    <button class="nav next" @click="next" aria-label="Next slide">›</button>
+  </section>
+  <!-- Manifests -->
+  <section class="main-manifests-section" v-if="status === 'ready' && activeAction === 'home'">
+    <span class="main-manifest active">
+      <span class="rover-active-heading">Active Rovers</span>
+      <!-- Perseverance -->
+      <span
+        class="rover active"
+        v-if="nasaRoverData.perseverance"
+        :class="{ selected: activeRover === 'perseverance' }"
+        @click="activeRover='perseverance'"
+      >
+        <div class="rover-data heading">{{ nasaRoverData.perseverance.name }}</div>
+        <div class="rover-data info status active">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.perseverance.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.perseverance.total_photos }}</span>
+        </div>
+      </span>
+      <!-- Curiosity -->
+      <span
+        class="rover active"
+        v-if="nasaRoverData.curiosity"
+        :class="{ selected: activeRover === 'curiosity' }"
+        @click="activeRover='curiosity'"
+      >
+        <div class="rover-data heading">{{ nasaRoverData.curiosity.name }}</div>
+        <div class="rover-data info status active">
+          <span class="info-left">Status: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.status }}</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.landing_date) }}</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.launch_date) }}</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.max_sol }}</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">{{ fmtDate(nasaRoverData.curiosity.max_date) }}</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">{{ nasaRoverData.curiosity.total_photos }}</span>
+        </div>
+      </span>
+    </span>
+    <span class="main-manifest inactive">
+      <span class="rover-inactive-heading">Historic Rovers</span>
+      <span class="rover complete">
+        <div class="rover-data heading">Opportunity</div>
+        <div class="rover-data info status complete">
+          <span class="info-left">Status: </span>
+          <span class="info-right">complete</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">25 January 2004</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">07 July 2003</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">5111</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">11 June 2018</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">198439</span>
+        </div>
+      </span>
+      <span class="rover complete">
+        <div class="rover-data heading">Spirit</div>
+        <div class="rover-data info status complete">
+          <span class="info-left">Status: </span>
+          <span class="info-right">complete</span>
+        </div>
+        <div class="rover-data info landed">
+          <span class="info-left">Landed: </span>
+          <span class="info-right">04 January 2004</span>
+        </div>
+        <div class="rover-data info launched">
+          <span class="info-left">Launched: </span>
+          <span class="info-right">10 June 2003</span>
+        </div>
+        <div class="rover-data info sol">
+          <span class="info-left">Max Sol: </span>
+          <span class="info-right">2208</span>
+        </div>
+        <div class="rover-data info date">
+          <span class="info-left">Max date: </span>
+          <span class="info-right">21 March 2010</span>
+        </div>
+        <div class="rover-data info photos">
+          <span class="info-left">Total Photos: </span>
+          <span class="info-right">124550</span>
+        </div>
+      </span>
+    </span>
+  </section>
+  <!-- Gallery -->
+  <section class="main-gallery-section" v-if="status === 'ready' && activeAction === 'gallery' && (activeGallery === 'perseverance' || activeGallery === 'curiosity')">
+    <div>
+      <span
+        class="main-gallery perseverance"
+        :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'perseverance'}"
+        role="button" tabindex="0"
+        @click="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+        @keydown.enter="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+        @keydown.space.prevent="activeGallery = 'perseverance'; activeRover = 'perseverance'"
+      >Perseverance Photos</span>
+      <span
+        class="main-gallery curiosity"
+        :class="{ 'is-active': activeAction === 'gallery' && activeRover === 'curiosity'}"
+        role="button" tabindex="0"
+        @click="activeGallery = 'curiosity'; activeRover = 'curiosity'"
+        @keydown.enter="activeGallery = 'curiosity'; activeRover = 'curiosity'"
+        @keydown.space.prevent="activeGallery = 'curiosity'; activeRover = 'curiosity'"
+      >Curiosity Photos</span>
+    </div>
+    <div class="main-gallery-wrapper">
+      <!-- Gallery grid -->
+      <div v-if="nasaRoverData[activeRover]?.recentPhotos?.length" class="main-gallery-images">
+        <div class="gallery-item" v-for="p in pageItems" :key="p.id">
+          <div class="gallery-item-image-info">
+            <span class="gallery-item-image-info-data">Sol {{ p.sol }}</span>
+            <span class="bullet-point"> &bull; </span>
+            <span class="gallery-item-image-info-data">{{ p.camera.name }}</span>
+            <!--            <span class="bullet-point"> &bull; </span>-->
+            <!--            <span class="gallery-item-image-info-data">{{ p.id }}</span>-->
+            <span class="image-info-view" @click="openPhoto(p, galleryAll)">
+                <img :src="viewIcon" alt="View image" aria-hidden="true"  role="button" tabindex="0">
+            </span>
+          </div>
+          <img
+            :src="p.img_src"
+            :alt="`Sol ${p.sol} — ${p.camera.full_name}`"
+            class="gallery-image clickable"
+            loading="lazy"
+          >
+        </div>
+      </div>
+      <!-- Pager -->
+      <nav class="pager" aria-label="Gallery pagination" v-if="pageCount > 1">
+        <button class="pager-btn" :disabled="!canPrev" @click="prevPage" aria-label="Previous page">‹</button>
+        <template v-for="(n, i) in pagesCompact" :key="i">
+          <button
+            v-if="n !== '…'"
+            class="pager-num"
+            :class="{ 'is-active': n === page }"
+            @click="goToPage(n)"
+            :aria-current="n === page ? 'page' : null"
+          >{{ n }}</button>
+          <span v-else class="pager-ellipsis" aria-hidden="true">…</span>
+        </template>
+        <button class="pager-btn" :disabled="!canNext" @click="nextPage" aria-label="Next page">›</button>
+      </nav>
+    </div>
+  </section>
+  <section class="main-theme" v-if="status === 'ready' && activeAction === 'theme'">
+    <div class="grid-4">
+      <div
+        v-for="t in themes"
+        :key="t.id"
+        :class="['theme-card', { selected: t.id === CURRENT_THEME }]"
+        :style="styleOf(t)"
+        @click="changeTheme(t)"
+      >
+        <div class="theme-card-head">
+          <span class="dot"></span>
+          <h3 class="heading">{{ t.label }}</h3>
+        </div>
+        <p class="muted">{{ t.blurb.look }}</p>
+        <div class="swatches">
+          <!--          <span class="swatch" title="Panel" style="background: var(&#45;&#45;panel-bg)"></span>-->
+          <span class="swatch" title="Accent" style="background: var(--accent)"></span>
+          <span class="swatch" title="Border" style="background: var(--border)"></span>
+          <span class="swatch" title="Heading" style="background: var(--heading-color)"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Image Modal -->
+  <div
+    v-if="isModalOpen && modalPhoto"
+    class="modal-backdrop"
+    @click.self="closeModal"
+    @keydown.esc="closeModal"
+    tabindex="-1"
+    ref="modalBackdrop"
+  >
+    <figure class="modal" @mouseenter="stopModal" @mouseleave="startModal">
+      <img :src="modalPhoto.img_src" :alt="`Sol ${modalPhoto.sol} – ${modalPhoto?.camera?.full_name || modalPhoto?.camera?.name || ''}`">
+      <!-- <odal slideshow controls -->
+      <button class="nav prev" @click="modalPrev" aria-label="Previous image">‹</button>
+      <button class="nav next" @click="modalNext" aria-label="Next image">›</button>
+      <button class="modal-close" @click="closeModal" aria-label="Close">✕</button>
+      <!-- Modal image -->
+      <figcaption class="modal-caption">
+        <span><strong>Rover:</strong> {{ modalPhoto.rover['name'] }}</span>
+        <span class="bullet-point"> &bull; </span>
+        <span><strong>Sol:</strong> {{ modalPhoto.sol }}</span>
+        <span class="bullet-point"> &bull; </span>
+        <span><strong>Date:</strong> {{ fmtDate(modalPhoto.earth_date) }}</span>
+        <span class="bullet-point"> &bull; </span>
+        <span><strong>Id:</strong> {{ modalPhoto.id }}</span>
+        <span class="bullet-point"> &bull; </span>
+        <span><strong>Camera:</strong> {{ modalPhoto?.camera?.full_name }}</span>
+      </figcaption>
+    </figure>
+  </div>
+  <div class="nasa-information" v-if="status === 'ready'">Rover data from: https://api.nasa.gov/</div>
+</main>
+<script>
+  const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
+
+  createApp({
+    setup() {
+      // Time to hold the cache
+      const ONE_DAY = 24 * 60 * 60 * 1_000;
+
+      // States / messages / data
+      const status = ref('loading');
+      const errorMsgValue = ref('');
+      const nasaRoverData = ref({});
+      const activeRover = ref('perseverance');
+      const activeAction = ref('home');
+      const activeGallery = ref('perseverance');
+
+      // Hero slideshow
+      const AUTOPLAY_MS = 5000;
+      const index = ref(0);
+      let timer = null;
+
+      // Modal slideshow
+      const MODAL_AUTOPLAY_MS = 5000;
+      const isModalOpen = ref(false);
+      const modalPhoto  = ref(null);
+      const modalBackdrop = ref(null);
+      const modalSlides = ref([]);
+      const modalIndex  = ref(0);
+      let modalTimer = null;
+      const wasPlaying = ref(false);
+
+      // Gallery
+      const PAGE_SIZE = 12;
+      const page = ref(1);
+
+      // THEME HANDLING
+      const CURRENT_THEME = ref('tharsis');
+      const THEME_KEY = 'theme';
+      const THEME_CLASSES = ['tharsis','noctis','cydonia','jezero'];
+      const viewIcon = computed(() => `images/view-${CURRENT_THEME.value}.png`)
+      const seperateIcon = computed(() => `images/seperate-${CURRENT_THEME.value}.png`)
+
+      function applyTheme(themeId) {
+        if (!THEME_CLASSES.includes(themeId)) return;
+        document.body.classList.remove(...THEME_CLASSES);
+        document.body.classList.add(themeId);
+        CURRENT_THEME.value = themeId;
+        try { localStorage.setItem(THEME_KEY, themeId); } catch {}
+      }
+
+      function changeTheme(theme) {
+        // CHANGED: apply and persist the selected theme
+        applyTheme(theme.id);
+      }
+
+      // Helpers for timers
+      function start() {
+        stop();
+        if (slides.value.length > 1 && !isModalOpen.value) {
+          timer = setInterval(next, AUTOPLAY_MS);
+          wasPlaying.value = true;
+        }
+      }
+
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+      }
+
+      function startGuarded() {
+        if (!isModalOpen.value) start();
+      }
+
+      function startModal() {
+        stopModal();
+        if (modalSlides.value.length > 1) {
+          modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
+        }
+      }
+      function stopModal() {
+        if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
+      }
+
+      // Open/close modal & wiring collection
+      function normalizeCollection(col) {
+        if (Array.isArray(col)) return col;
+        if (col && Array.isArray(col.value)) return col.value;
+        return [];
+      }
+
+      function openPhoto(photo, collection) {
+        if (!photo) return;
+
+        // Seed modal slides
+        const col = normalizeCollection(collection);
+        modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
+
+        // Find index for clicked/hero photo
+        const idx = modalSlides.value.findIndex(p => p.id === photo.id);
+        modalIndex.value = idx >= 0 ? idx : 0;
+        modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
+
+        stop();
+
+        isModalOpen.value = true;
+        nextTick(() => modalBackdrop.value?.focus());
+      }
+
+      function closeModal() {
+        isModalOpen.value = false;
+        modalPhoto.value = null;
+        stopModal();
+        if (wasPlaying.value && slides.value.length > 1) start();
+      }
+
+      function modalNext(){
+        if (!modalSlides.value.length) return;
+        modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
+        modalPhoto.value = modalSlides.value[modalIndex.value];
+      }
+
+      function modalPrev(){
+        if (!modalSlides.value.length) return;
+        modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
+        modalPhoto.value = modalSlides.value[modalIndex.value];
+      }
+
+      // Keep hero paused/resume when switching Home <-> Gallery
+      watch(activeAction, (val, oldVal) => {
+        if (val === 'gallery') {
+          // remember current playing state, then stop the hero
+          wasPlaying.value = !!timer;
+          stop();
+        } else if (val === 'home') {
+          // resume only if it was previously playing and modal is closed
+          if (wasPlaying.value && slides.value.length > 1 && !isModalOpen.value) {
+            start();
+          }
+        }
+      });
+
+      function openRandomPhoto() {
+        const pool = [
+          ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
+          ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
+        ];
+
+        if (pool.length === 0) {
+          errorMsgValue.value = 'No photos available to pick at random.';
+          return;
+        }
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        openPhoto(pick, pool);
+        // activeAction.value = 'random';
+      }
+
+      // Hero slides
+      const slides = computed(() =>
+        nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+      );
+      const current = computed(() => slides.value[index.value] ?? null);
+      const activeRoverLabel = computed(
+        () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
+      );
+
+      function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
+      function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
+
+      // When slides change, (re)start hero only if modal is closed
+      watch(slides, (arr)=>{
+        index.value = 0;
+        if (arr.length > 1 && !isModalOpen.value) start(); else stop();
+      });
+
+      // Keep hero paused while modal is open; run modal autoplay while open
+      watch(isModalOpen, (open) => {
+        if (open) {
+          stop();       // hero off
+          startModal(); // modal on
+        } else {
+          stopModal();  // modal off
+          if (wasPlaying.value && slides.value.length > 1) start();
+        }
+      });
+
+      // Keyboard nav (modal has priority)
+      const keyHandler = (e) => {
+        if (status.value !== 'ready') return;
+
+        if (isModalOpen.value) {
+          if (e.key === 'ArrowRight') modalNext();
+          if (e.key === 'ArrowLeft')  modalPrev();
+          if (e.key === 'Escape')     closeModal();
+          return;
+        }
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'ArrowLeft')  prev();
+      };
+      onMounted(() => window.addEventListener('keydown', keyHandler));
+      onUnmounted(() => window.removeEventListener('keydown', keyHandler));
+
+      // Full gallery list for the active rover
+      const galleryAll = computed(() =>
+        nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+      );
+
+      // Reset to page 1 when switching rover or entering gallery
+      watch([activeRover, activeAction], () => { page.value = 1; });
+
+      // Counts and slices
+      const pageCount = computed(() => Math.max(1, Math.ceil(galleryAll.value.length / PAGE_SIZE)));
+      const pageItems = computed(() => {
+        const start = (page.value - 1) * PAGE_SIZE;
+        return galleryAll.value.slice(start, start + PAGE_SIZE);
+      });
+
+      const pagesCompact = computed(() => {
+        const total = pageCount.value;
+        const currentP = page.value;
+        const delta = 1; // neighbors around current
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        const list = [1];
+        const left  = Math.max(2, currentP - delta);
+        const right = Math.min(total - 1, currentP + delta);
+        if (left > 2) list.push('…');
+        for (let n = left; n <= right; n++) list.push(n);
+        if (right < total - 1) list.push('…');
+        list.push(total);
+        return list;
+      });
+
+
+      // Nav helpers
+      const canPrev = computed(() => page.value > 1);
+      const canNext = computed(() => page.value < pageCount.value);
+      function prevPage(){ if (canPrev.value) page.value--; }
+      function nextPage(){ if (canNext.value) page.value++; }
+      function goToPage(p){ if (p >= 1 && p <= pageCount.value) page.value = p; }
+
+      // Caching
+      function cacheData(key, value, ttlMs) {
+        localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
+      }
+
+      function checkCachedData(key) {
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+        try {
+          const { value, expires } = JSON.parse(raw);
+          if (!Number.isFinite(expires) || Date.now() > expires) {
+            localStorage.removeItem(key);
+            return false;
+          }
+          console.log('Using cache data');
+          nasaRoverData.value = value;
+          status.value = 'ready';
+          errorMsgValue.value = '';
+          return true;
+        } catch {
+          localStorage.removeItem(key);
+          return false;
+        }
+      }
+
+      // =====================================================
+      // =============== NETLIFY HELPER =================
+      // =====================================================
+      async function api(type, { rover = 'perseverance', sol } = {}) {
+        const url = `/.netlify/functions/nasa?type=${encodeURIComponent(type)}&rover=${encodeURIComponent(rover)}${sol != null ? `&sol=${encodeURIComponent(sol)}` : ''}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+        return res.json();
+      }
+
+      // =====================================================
+      // ===== NETLIFY VERSION =========
+      // =====================================================
+      async function getNasaRoverData() {
+        status.value = 'loading';
+        errorMsgValue.value = '';
+        try {
+          const rovers  = ['perseverance', 'curiosity'];
+          const results = {};
+
+          for (const rover of rovers) {
+            const manifestRes = await api('manifest', { rover });
+            const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
+            const manifest = { [rover]: manifestSrc };
+
+            // Drop the giant manifest.photos array
+            delete manifest[rover].photos;
+
+            let aggregated = [];
+            if (rover === 'perseverance' || rover === 'curiosity') {
+              const maxSol = Number(manifest[rover].max_sol) || 0;
+
+              // Use maxSol for the required sol param
+              const photosRes = await api('photos', { rover, sol: maxSol });
+              const photos = photosRes?.photos || [];
+
+              // If that sol has no photos, just skip this rover entry
+              if (!photos.length) continue;
+
+              aggregated.push(...photos);
+            }
+
+            const key = (manifest[rover].name || rover).toLowerCase();
+            results[key] = {
+              ...manifest[rover],
+              recentPhotos: [{ sol: manifest[rover].max_sol ?? null, photos: aggregated }]
+            };
+          }
+
+          nasaRoverData.value = results;
+          cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+          status.value = 'ready';
+          if (slides.value.length > 1) start();
+        } catch (e) {
+          status.value = 'error';
+          errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+        }
+      }
+
+
+      // =====================================================
+      // =============== DATA FETCH =================
+      // =====================================================
+      // async function getNasaRoverData() {
+      //   status.value = 'loading';
+      //   errorMsgValue.value = '';
+      //   try {
+      //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
+      //     const rovers  = ['perseverance', 'curiosity'];
+      //     const results = {};
+      //
+      //     for (const rover of rovers) {
+      //       // Manifest
+      //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
+      //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
+      //       const res = await fetch(manifestUrl);
+      //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      //       const json = await res.json();
+      //       const manifest = { [rover]: json.photo_manifest ?? json };
+      //
+      //       delete manifest[rover].photos;
+      //
+      //       let aggregated = [];
+      //       if (rover === 'perseverance' || rover === 'curiosity') {
+      //         const maxSol = Number(manifest[rover].max_sol) || 0;
+      //         const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
+      //         solUrl.search = new URLSearchParams({ api_key, sol: String(maxSol) }).toString();
+      //         const r = await fetch(solUrl);
+      //         if (!r.ok) continue;
+      //         const { photos = [] } = await r.json();
+      //         if (!photos.length) continue;
+      //         aggregated.push(...photos);
+      //       }
+      //
+      //       const key = (manifest[rover].name || rover).toLowerCase();
+      //       const entry = {
+      //         ...manifest[rover],
+      //         recentPhotos: [
+      //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
+      //         ]
+      //       };
+      //       results[key] = entry;
+      //     }
+      //
+      //     nasaRoverData.value = results;
+      //     cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
+      //     status.value = 'ready';
+      //     if (slides.value.length > 1) start();
+      //   } catch (e) {
+      //     status.value = 'error';
+      //     errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
+      //   }
+      // }
+
+      // Date formatter
+      function fmtDate(iso, locale = 'en-GB') {
+        if (!iso) return '';
+        const [y, m, d] = iso.split('-').map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+      }
+
+      const themes = [
+        {
+          id: 'tharsis',
+          label: 'Tharsis',
+          blurb: {
+            look: 'Deep charcoal reds with warm, rosy text. Moody but inviting—cockpit energy.',
+          },
+          tokens: {
+            '--panel-bg': '#190707',
+            '--font-color': '#FFECEA',
+            '--font-color-muted': '#F0B5AF',
+            '--heading-color': '#FFD8D2',
+            '--border': '#5A1A1A',
+            '--border-radius': '10px',
+            '--accent': '#FF3B30',
+            '--accent-contrast': '#1A0505',
+          },
+        },
+        {
+          id: 'noctis',
+          label: 'Noctis',
+          blurb: {
+            look: 'Dark plum base with soft blush text—cozy and modern.',
+          },
+          tokens: {
+            '--panel-bg': '#160B12',
+            '--font-color': '#FFF0FA',
+            '--font-color-muted': '#F2B6D0',
+            '--heading-color': '#FFE0F0',
+            '--border': '#3F1428',
+            '--border-radius': '10px',
+            '--accent': '#FF6E8A',
+            '--accent-contrast': '#19080C',
+          },
+        },
+        {
+          id: 'cydonia',
+          label: 'Cydonia',
+          blurb: {
+            look: 'Inky blue background with crisp, icy text—clean and fast.',
+          },
+          tokens: {
+            '--panel-bg': '#0A151D',
+            '--font-color': '#EAF9FF',
+            '--font-color-muted': '#BDE2F0',
+            '--heading-color': '#DDF4FF',
+            '--border': '#183241',
+            '--border-radius': '10px',
+            '--accent': '#2EE7FF',
+            '--accent-contrast': '#03151A',
+          },
+        },
+        {
+          id: 'jezero',
+          label: 'Jezero',
+          blurb: {
+            look: 'Dark, forest-leaning base with fresh minty text—breathable and grounded.',
+          },
+          tokens: {
+            '--panel-bg': '#0F1714',
+            '--font-color': '#EAFBF4',
+            '--font-color-muted': '#BFE8D9',
+            '--heading-color': '#D7FFF4',
+            '--border': '#1E3A33',
+            '--border-radius': '10px',
+            '--accent': '#2DE2C5',
+            '--accent-contrast': '#051613',
+          },
+        },
+      ];
+
+      const styleOf = (t) =>
+        Object.fromEntries(Object.entries(t.tokens).map(([k, v]) => [k, String(v)]));
+
+      onMounted(async () => {
+        let initial = 'tharsis';
+        try {
+          const saved = localStorage.getItem(THEME_KEY);
+          if (THEME_CLASSES.includes(saved)) initial = saved;
+        } catch {}
+        applyTheme(initial);
+
+        const ok = checkCachedData('nasaRoverData');
+        if (!ok) {
+          await getNasaRoverData();
+        } else {
+          if (slides.value.length > 1) start();
+        }
+      });
+
+      onUnmounted(() => { stop(); stopModal(); });
+
+      return {
+        // Status
+        status, errorMsgValue,
+        // Data
+        nasaRoverData,
+        // Hero slideshow
+        activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
+        // Header selection
+        activeAction, activeGallery,
+        // Modal slideshow
+        isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
+        modalNext, modalPrev, startModal, stopModal, wasPlaying,
+        // Utils
+        fmtDate,
+        // Gallery
+        page, pageCount, pageItems, canPrev, canNext, prevPage, nextPage, goToPage, galleryAll, pagesCompact,
+        // Theme
+        themes, styleOf, changeTheme, CURRENT_THEME, viewIcon, seperateIcon,
+      };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
