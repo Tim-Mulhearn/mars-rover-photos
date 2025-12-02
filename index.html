@@ -55,27 +55,32 @@
     >Theme</span>
   </section>
   <!-- Site description -->
-  <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
-    <p>
-      Latest photos from the most recent sol (Mars day). The slideshow starts with
-      <strong class="accent-color">Perseverance</strong>; switch to
-      <strong class="accent-color">Curiosity</strong> below.
-    </p>
-    <p class="muted" aria-live="polite">
-      Perseverance: Sol
-      <strong class="accent-color">{{ nasaRoverData.perseverance?.max_sol ?? '—' }}</strong>
-      &bull;
-      Curiosity: Sol
-      <strong class="accent-color">{{ nasaRoverData.curiosity?.max_sol ?? '—' }}</strong>
-    </p>
-    <p>
-      <strong class="accent-color">Gallery</strong> lets you browse the latest set per rover.
-      <strong class="accent-color">Random</strong> opens a random image from either active rover.
-      <strong class="accent-color">Theme</strong> changes the colour scheme.
-    </p>
-    <p>Historic rovers: manifest data only—no images.</p>
-  </section>
-  <section class="main-description" v-if="status === 'ready' && activeAction === 'gallery'">
+    <section class="main-description" v-if="status === 'ready' && activeAction === 'home'">
+        <p class="muted">
+            <strong class="accent-color">Note:</strong> NASA has shut down the public rover image API. This demo uses hardcoded sample data for display purposes.
+        </p>
+
+        <p>
+            Showing Latest photos from the most recent sol (Mars day). The slideshow starts with
+            <strong class="accent-color">Perseverance</strong>; switch to
+            <strong class="accent-color">Curiosity</strong> below.
+        </p>
+        <p class="muted" aria-live="polite">
+            Perseverance: Sol
+            <strong class="accent-color">{{ nasaRoverData.perseverance?.max_sol ?? '—' }}</strong>
+            &bull;
+            Curiosity: Sol
+            <strong class="accent-color">{{ nasaRoverData.curiosity?.max_sol ?? '—' }}</strong>
+        </p>
+        <p>
+            <strong class="accent-color">Gallery</strong> lets you browse the latest set per rover.
+            <strong class="accent-color">Random</strong> opens a random image from either active rover.
+            <strong class="accent-color">Theme</strong> changes the colour scheme.
+        </p>
+        <p>Historic rovers: manifest data only—no images.</p>
+    </section>
+
+    <section class="main-description" v-if="status === 'ready' && activeAction === 'gallery'">
     <p>Select a rover to see the latest images.</p>
   </section>
   <section class="main-description" v-if="status === 'ready' && activeAction === 'theme'">
@@ -348,504 +353,597 @@
   <div class="github-information" v-if="status === 'ready'"><a href="https://github.com/Tim-Mulhearn/mars-rover-photos" target="_blank"><span>GitHub</span></a></div>
 </main>
 <script>
-  const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
+    const { createApp, ref, onMounted, onUnmounted, nextTick, watch, computed } = Vue;
 
-  createApp({
-    setup() {
-      // Time to hold the cache
-      const ONE_DAY = 24 * 60 * 60 * 1_000;
+    createApp({
+        setup() {
+            // States / messages / data
+            const status = ref('loading');
+            const errorMsgValue = ref('');
+            const nasaRoverData = ref({});
+            const activeRover = ref('perseverance');
+            const activeAction = ref('home');
+            const activeGallery = ref('perseverance');
 
-      // States / messages / data
-      const status = ref('loading');
-      const errorMsgValue = ref('');
-      const nasaRoverData = ref({});
-      const activeRover = ref('perseverance');
-      const activeAction = ref('home');
-      const activeGallery = ref('perseverance');
+            // Hero slideshow
+            const AUTOPLAY_MS = 5000;
+            const index = ref(0);
+            let timer = null;
 
-      // Hero slideshow
-      const AUTOPLAY_MS = 5000;
-      const index = ref(0);
-      let timer = null;
+            // Modal slideshow
+            const MODAL_AUTOPLAY_MS = 5000;
+            const isModalOpen = ref(false);
+            const modalPhoto  = ref(null);
+            const modalBackdrop = ref(null);
+            const modalSlides = ref([]);
+            const modalIndex  = ref(0);
+            let modalTimer = null;
+            const wasPlaying = ref(false);
 
-      // Modal slideshow
-      const MODAL_AUTOPLAY_MS = 5000;
-      const isModalOpen = ref(false);
-      const modalPhoto  = ref(null);
-      const modalBackdrop = ref(null);
-      const modalSlides = ref([]);
-      const modalIndex  = ref(0);
-      let modalTimer = null;
-      const wasPlaying = ref(false);
+            // Gallery
+            const PAGE_SIZE = 12;
+            const page = ref(1);
 
-      // Gallery
-      const PAGE_SIZE = 12;
-      const page = ref(1);
+            // THEME HANDLING
+            const CURRENT_THEME = ref('tharsis');
+            const THEME_KEY = 'theme';
+            const THEME_CLASSES = ['tharsis','noctis','cydonia','jezero'];
+            const viewIcon = computed(() => `images/view-${CURRENT_THEME.value}.png`);
+            const seperateIcon = computed(() => `images/seperate-${CURRENT_THEME.value}.png`);
 
-      // THEME HANDLING
-      const CURRENT_THEME = ref('tharsis');
-      const THEME_KEY = 'theme';
-      const THEME_CLASSES = ['tharsis','noctis','cydonia','jezero'];
-      const viewIcon = computed(() => `images/view-${CURRENT_THEME.value}.png`)
-      const seperateIcon = computed(() => `images/seperate-${CURRENT_THEME.value}.png`)
-
-      function applyTheme(themeId) {
-        if (!THEME_CLASSES.includes(themeId)) return;
-        document.body.classList.remove(...THEME_CLASSES);
-        document.body.classList.add(themeId);
-        CURRENT_THEME.value = themeId;
-        try { localStorage.setItem(THEME_KEY, themeId); } catch {}
-      }
-
-      function changeTheme(theme) {
-        // CHANGED: apply and persist the selected theme
-        applyTheme(theme.id);
-      }
-
-      // Helpers for timers
-      function start() {
-        stop();
-        if (slides.value.length > 1 && !isModalOpen.value) {
-          timer = setInterval(next, AUTOPLAY_MS);
-          wasPlaying.value = true;
-        }
-      }
-
-      function stop() {
-        if (timer) { clearInterval(timer); timer = null; }
-      }
-
-      function startGuarded() {
-        if (!isModalOpen.value) start();
-      }
-
-      function startModal() {
-        stopModal();
-        if (modalSlides.value.length > 1) {
-          modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
-        }
-      }
-      function stopModal() {
-        if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
-      }
-
-      // Open/close modal & wiring collection
-      function normalizeCollection(col) {
-        if (Array.isArray(col)) return col;
-        if (col && Array.isArray(col.value)) return col.value;
-        return [];
-      }
-
-      function openPhoto(photo, collection) {
-        if (!photo) return;
-
-        // Seed modal slides
-        const col = normalizeCollection(collection);
-        modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
-
-        // Find index for clicked/hero photo
-        const idx = modalSlides.value.findIndex(p => p.id === photo.id);
-        modalIndex.value = idx >= 0 ? idx : 0;
-        modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
-
-        stop();
-
-        isModalOpen.value = true;
-        nextTick(() => modalBackdrop.value?.focus());
-      }
-
-      function closeModal() {
-        isModalOpen.value = false;
-        modalPhoto.value = null;
-        stopModal();
-        if (wasPlaying.value && slides.value.length > 1) start();
-      }
-
-      function modalNext(){
-        if (!modalSlides.value.length) return;
-        modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
-        modalPhoto.value = modalSlides.value[modalIndex.value];
-      }
-
-      function modalPrev(){
-        if (!modalSlides.value.length) return;
-        modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
-        modalPhoto.value = modalSlides.value[modalIndex.value];
-      }
-
-      // Keep hero paused/resume when switching Home <-> Gallery
-      watch(activeAction, (val, oldVal) => {
-        if (val === 'gallery') {
-          // remember current playing state, then stop the hero
-          wasPlaying.value = !!timer;
-          stop();
-        } else if (val === 'home') {
-          // resume only if it was previously playing and modal is closed
-          if (wasPlaying.value && slides.value.length > 1 && !isModalOpen.value) {
-            start();
-          }
-        }
-      });
-
-      function openRandomPhoto() {
-        const pool = [
-          ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
-          ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
-        ];
-
-        if (pool.length === 0) {
-          errorMsgValue.value = 'No photos available to pick at random.';
-          return;
-        }
-        const pick = pool[Math.floor(Math.random() * pool.length)];
-        openPhoto(pick, pool);
-        // activeAction.value = 'random';
-      }
-
-      // Hero slides
-      const slides = computed(() =>
-        nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
-      );
-      const current = computed(() => slides.value[index.value] ?? null);
-      const activeRoverLabel = computed(
-        () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
-      );
-
-      function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
-      function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
-
-      // When slides change, (re)start hero only if modal is closed
-      watch(slides, (arr)=>{
-        index.value = 0;
-        if (arr.length > 1 && !isModalOpen.value) start(); else stop();
-      });
-
-      // Keep hero paused while modal is open; run modal autoplay while open
-      watch(isModalOpen, (open) => {
-        if (open) {
-          stop();       // hero off
-          startModal(); // modal on
-        } else {
-          stopModal();  // modal off
-          if (wasPlaying.value && slides.value.length > 1) start();
-        }
-      });
-
-      // Keyboard nav (modal has priority)
-      const keyHandler = (e) => {
-        if (status.value !== 'ready') return;
-
-        if (isModalOpen.value) {
-          if (e.key === 'ArrowRight') modalNext();
-          if (e.key === 'ArrowLeft')  modalPrev();
-          if (e.key === 'Escape')     closeModal();
-          return;
-        }
-        if (e.key === 'ArrowRight') next();
-        if (e.key === 'ArrowLeft')  prev();
-      };
-      onMounted(() => window.addEventListener('keydown', keyHandler));
-      onUnmounted(() => window.removeEventListener('keydown', keyHandler));
-
-      // Full gallery list for the active rover
-      const galleryAll = computed(() =>
-        nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
-      );
-
-      // Reset to page 1 when switching rover or entering gallery
-      watch([activeRover, activeAction], () => { page.value = 1; });
-
-      // Counts and slices
-      const pageCount = computed(() => Math.max(1, Math.ceil(galleryAll.value.length / PAGE_SIZE)));
-      const pageItems = computed(() => {
-        const start = (page.value - 1) * PAGE_SIZE;
-        return galleryAll.value.slice(start, start + PAGE_SIZE);
-      });
-
-      const pagesCompact = computed(() => {
-        const total = pageCount.value;
-        const currentP = page.value;
-        const delta = 1; // neighbors around current
-        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-        const list = [1];
-        const left  = Math.max(2, currentP - delta);
-        const right = Math.min(total - 1, currentP + delta);
-        if (left > 2) list.push('…');
-        for (let n = left; n <= right; n++) list.push(n);
-        if (right < total - 1) list.push('…');
-        list.push(total);
-        return list;
-      });
-
-
-      // Nav helpers
-      const canPrev = computed(() => page.value > 1);
-      const canNext = computed(() => page.value < pageCount.value);
-      function prevPage(){ if (canPrev.value) page.value--; }
-      function nextPage(){ if (canNext.value) page.value++; }
-      function goToPage(p){ if (p >= 1 && p <= pageCount.value) page.value = p; }
-
-      // Caching
-      function cacheData(key, value, ttlMs) {
-        localStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
-      }
-
-      function checkCachedData(key) {
-        const raw = localStorage.getItem(key);
-        if (!raw) return false;
-        try {
-          const { value, expires } = JSON.parse(raw);
-          if (!Number.isFinite(expires) || Date.now() > expires) {
-            localStorage.removeItem(key);
-            return false;
-          }
-          console.log('Using cache data');
-          nasaRoverData.value = value;
-          status.value = 'ready';
-          errorMsgValue.value = '';
-          return true;
-        } catch {
-          localStorage.removeItem(key);
-          return false;
-        }
-      }
-
-      // =====================================================
-      // =============== NETLIFY HELPER =================
-      // =====================================================
-      async function api(type, { rover = 'perseverance', sol } = {}) {
-        const url = `/.netlify/functions/nasa?type=${encodeURIComponent(type)}&rover=${encodeURIComponent(rover)}${sol != null ? `&sol=${encodeURIComponent(sol)}` : ''}`;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
-        return res.json();
-      }
-
-      // =====================================================
-      // ===== NETLIFY VERSION =========
-      // =====================================================
-      async function getNasaRoverData() {
-        status.value = 'loading';
-        errorMsgValue.value = '';
-        try {
-          const rovers  = ['perseverance', 'curiosity'];
-          const results = {};
-
-          for (const rover of rovers) {
-            const manifestRes = await api('manifest', { rover });
-            const manifestSrc = manifestRes.photo_manifest ?? manifestRes;
-            const manifest = { [rover]: manifestSrc };
-
-            // Drop the giant manifest.photos array
-            delete manifest[rover].photos;
-
-            let aggregated = [];
-            if (rover === 'perseverance' || rover === 'curiosity') {
-              const maxSol = Number(manifest[rover].max_sol) || 0;
-
-              // Use maxSol for the required sol param
-              const photosRes = await api('photos', { rover, sol: maxSol });
-              const photos = photosRes?.photos || [];
-
-              // If that sol has no photos, just skip this rover entry
-              if (!photos.length) continue;
-
-              aggregated.push(...photos);
+            function applyTheme(themeId) {
+                if (!THEME_CLASSES.includes(themeId)) return;
+                document.body.classList.remove(...THEME_CLASSES);
+                document.body.classList.add(themeId);
+                CURRENT_THEME.value = themeId;
+                try { localStorage.setItem(THEME_KEY, themeId); } catch {}
             }
 
-            const key = (manifest[rover].name || rover).toLowerCase();
-            results[key] = {
-              ...manifest[rover],
-              recentPhotos: [{ sol: manifest[rover].max_sol ?? null, photos: aggregated }]
+            function changeTheme(theme) {
+                applyTheme(theme.id);
+            }
+
+            // Helpers for timers
+            function start() {
+                stop();
+                if (slides.value.length > 1 && !isModalOpen.value) {
+                    timer = setInterval(next, AUTOPLAY_MS);
+                    wasPlaying.value = true;
+                }
+            }
+
+            function stop() {
+                if (timer) { clearInterval(timer); timer = null; }
+            }
+
+            function startGuarded() {
+                if (!isModalOpen.value) start();
+            }
+
+            function startModal() {
+                stopModal();
+                if (modalSlides.value.length > 1) {
+                    modalTimer = setInterval(modalNext, MODAL_AUTOPLAY_MS);
+                }
+            }
+            function stopModal() {
+                if (modalTimer) { clearInterval(modalTimer); modalTimer = null; }
+            }
+
+            // Open/close modal & wiring collection
+            function normalizeCollection(col) {
+                if (Array.isArray(col)) return col;
+                if (col && Array.isArray(col.value)) return col.value;
+                return [];
+            }
+
+            function openPhoto(photo, collection) {
+                if (!photo) return;
+
+                const col = normalizeCollection(collection);
+                modalSlides.value = col.length ? col.slice() : (slides.value.slice() || []);
+
+                const idx = modalSlides.value.findIndex(p => p.id === photo.id);
+                modalIndex.value = idx >= 0 ? idx : 0;
+                modalPhoto.value = modalSlides.value[modalIndex.value] || photo;
+
+                stop();
+
+                isModalOpen.value = true;
+                nextTick(() => modalBackdrop.value?.focus());
+            }
+
+            function closeModal() {
+                isModalOpen.value = false;
+                modalPhoto.value = null;
+                stopModal();
+                if (wasPlaying.value && slides.value.length > 1) start();
+            }
+
+            function modalNext(){
+                if (!modalSlides.value.length) return;
+                modalIndex.value = (modalIndex.value + 1) % modalSlides.value.length;
+                modalPhoto.value = modalSlides.value[modalIndex.value];
+            }
+
+            function modalPrev(){
+                if (!modalSlides.value.length) return;
+                modalIndex.value = (modalIndex.value - 1 + modalSlides.value.length) % modalSlides.value.length;
+                modalPhoto.value = modalSlides.value[modalIndex.value];
+            }
+
+            // Keep hero paused/resume when switching Home <-> Gallery
+            watch(activeAction, (val) => {
+                if (val === 'gallery') {
+                    wasPlaying.value = !!timer;
+                    stop();
+                } else if (val === 'home') {
+                    if (wasPlaying.value && slides.value.length > 1 && !isModalOpen.value) {
+                        start();
+                    }
+                }
+            });
+
+            function openRandomPhoto() {
+                const pool = [
+                    ...(nasaRoverData.value?.perseverance?.recentPhotos?.[0]?.photos ?? []),
+                    ...(nasaRoverData.value?.curiosity?.recentPhotos?.[0]?.photos ?? []),
+                ];
+
+                if (pool.length === 0) {
+                    errorMsgValue.value = 'No photos available to pick at random.';
+                    return;
+                }
+                const pick = pool[Math.floor(Math.random() * pool.length)];
+                openPhoto(pick, pool);
+            }
+
+            // Hero slides
+            const slides = computed(() =>
+                nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+            );
+            const current = computed(() => slides.value[index.value] ?? null);
+            const activeRoverLabel = computed(
+                () => nasaRoverData.value?.[activeRover.value]?.name ?? activeRover.value
+            );
+
+            function next(){ if (!slides.value.length) return; index.value = (index.value + 1) % slides.value.length; }
+            function prev(){ if (!slides.value.length) return; index.value = (index.value - 1 + slides.value.length) % slides.value.length; }
+
+            watch(slides, (arr)=>{
+                index.value = 0;
+                if (arr.length > 1 && !isModalOpen.value) start(); else stop();
+            });
+
+            watch(isModalOpen, (open) => {
+                if (open) {
+                    stop();
+                    startModal();
+                } else {
+                    stopModal();
+                    if (wasPlaying.value && slides.value.length > 1) start();
+                }
+            });
+
+            // Keyboard nav
+            const keyHandler = (e) => {
+                if (status.value !== 'ready') return;
+
+                if (isModalOpen.value) {
+                    if (e.key === 'ArrowRight') modalNext();
+                    if (e.key === 'ArrowLeft')  modalPrev();
+                    if (e.key === 'Escape')     closeModal();
+                    return;
+                }
+                if (e.key === 'ArrowRight') next();
+                if (e.key === 'ArrowLeft')  prev();
             };
-          }
+            onMounted(() => window.addEventListener('keydown', keyHandler));
+            onUnmounted(() => window.removeEventListener('keydown', keyHandler));
 
-          nasaRoverData.value = results;
-          cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
-          status.value = 'ready';
-          if (slides.value.length > 1) start();
-        } catch (e) {
-          status.value = 'error';
-          //errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
-          errorMsgValue.value = 'Sorry, we can no longer retrieve data as NASA has disabled the API.';
+            // Full gallery list
+            const galleryAll = computed(() =>
+                nasaRoverData.value?.[activeRover.value]?.recentPhotos?.[0]?.photos ?? []
+            );
+
+            watch([activeRover, activeAction], () => { page.value = 1; });
+
+            const pageCount = computed(() => Math.max(1, Math.ceil(galleryAll.value.length / PAGE_SIZE)));
+            const pageItems = computed(() => {
+                const start = (page.value - 1) * PAGE_SIZE;
+                return galleryAll.value.slice(start, start + PAGE_SIZE);
+            });
+
+            const pagesCompact = computed(() => {
+                const total = pageCount.value;
+                const currentP = page.value;
+                const delta = 1;
+                if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+                const list = [1];
+                const left  = Math.max(2, currentP - delta);
+                const right = Math.min(total - 1, currentP + delta);
+                if (left > 2) list.push('…');
+                for (let n = left; n <= right; n++) list.push(n);
+                if (right < total - 1) list.push('…');
+                list.push(total);
+                return list;
+            });
+
+            const canPrev = computed(() => page.value > 1);
+            const canNext = computed(() => page.value < pageCount.value);
+            function prevPage(){ if (canPrev.value) page.value--; }
+            function nextPage(){ if (canNext.value) page.value++; }
+            function goToPage(p){ if (p >= 1 && p <= pageCount.value) page.value = p; }
+
+            // Date formatter
+            function fmtDate(iso, locale = 'en-GB') {
+                if (!iso) return '';
+                const [y, m, d] = iso.split('-').map(Number);
+                const dt = new Date(Date.UTC(y, m - 1, d));
+                return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+
+            // ------------------------------------------------------------------
+            // STATIC DATA – API SHUT DOWN, SO HARD CODED A FEW IMAGES FOR NOW
+            // ------------------------------------------------------------------
+            const STATIC_ROVER_DATA = {
+                perseverance: {
+                    name: 'Perseverance',
+                    status: 'active',
+                    launch_date: '2020-07-30',
+                    landing_date: '2021-02-18',
+                    max_sol: 1700,
+                    max_date: '2025-01-01',
+                    total_photos: 8,
+                    recentPhotos: [
+                        {
+                            photos: [
+                                {
+                                    id: 100001,
+                                    sol: 1700,
+                                    img_src: 'rover-images/perseverance/p1.png',
+                                    earth_date: '2025-01-01',
+                                    camera: {
+                                        name: 'NAVCAM',
+                                        full_name: 'Left Navigation Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100002,
+                                    sol: 1600,
+                                    img_src: 'rover-images/perseverance/p2.png',
+                                    earth_date: '2025-08-25',
+                                    camera: {
+                                        name: 'WATSON',
+                                        full_name: 'WATSON Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100003,
+                                    sol: 1500,
+                                    img_src: 'rover-images/perseverance/p3.png',
+                                    earth_date: '2025-10-05',
+                                    camera: {
+                                        name: 'MASTCAM',
+                                        full_name: 'Right Mastcam-Z'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100004,
+                                    sol: 1400,
+                                    img_src: 'rover-images/perseverance/p4.png',
+                                    earth_date: '2025-01-27',
+                                    camera: {
+                                        name: 'NAVCAM',
+                                        full_name: 'Left Navigation Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100005,
+                                    sol: 1300,
+                                    img_src: 'rover-images/perseverance/p5.png',
+                                    earth_date: '2024-10-16',
+                                    camera: {
+                                        name: 'MASTCAM',
+                                        full_name: 'Left Mastcam-Z Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100006,
+                                    sol: 1200,
+                                    img_src: 'rover-images/perseverance/p6.png',
+                                    earth_date: '2024-07-05',
+                                    camera: {
+                                        name: 'MASTCAM',
+                                        full_name: 'Left Mastcam-Z Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100007,
+                                    sol: 1100,
+                                    img_src: 'rover-images/perseverance/p7.png',
+                                    earth_date: '2024-03-25',
+                                    camera: {
+                                        name: 'NAVCAM',
+                                        full_name: 'Left Navigation Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                                {
+                                    id: 100008,
+                                    sol: 1000,
+                                    img_src: 'rover-images/perseverance/p8.png',
+                                    earth_date: '2023-12-13',
+                                    camera: {
+                                        name: 'HAZCAM',
+                                        full_name: 'Rear Right Hazard Avoidance Camera'
+                                    },
+                                    rover: {
+                                        name: 'Perseverance'
+                                    }
+                                },
+                            ]
+                        }
+                    ]
+                },
+                curiosity: {
+                    name: 'Curiosity',
+                    status: 'active',
+                    launch_date: '2011-11-26',
+                    landing_date: '2012-08-06',
+                    max_sol: 4734,
+                    max_date: '2025-01-01',
+                    total_photos: 8,
+                    recentPhotos: [
+                        {
+                            photos: [
+                                {
+                                    id: 100001,
+                                    sol: 4734,
+                                    img_src: 'rover-images/curiosity/c1.jpg',
+                                    earth_date: '2025-11-30',
+                                    camera: {
+                                        name: 'NAV_RIGHT_B',
+                                        full_name: 'Right Navigation Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100002,
+                                    sol: 4000,
+                                    img_src: 'rover-images/curiosity/c2.jpg',
+                                    earth_date: '2023-11-07',
+                                    camera: {
+                                        name: 'NAV_RIGHT_B',
+                                        full_name: 'Right Navigation Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100003,
+                                    sol: 3000,
+                                    img_src: 'rover-images/curiosity/c3.jpg',
+                                    earth_date: '2021-01-13',
+                                    camera: {
+                                        name: 'RHAZ_RIGHT_B',
+                                        full_name: 'Rear Hazard Avoidance Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100004,
+                                    sol: 2000,
+                                    img_src: 'rover-images/curiosity/c4.jpg',
+                                    earth_date: '2018-03-23',
+                                    camera: {
+                                        name: 'MASTCAM',
+                                        full_name: 'Mast Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100005,
+                                    sol: 1000,
+                                    img_src: 'rover-images/curiosity/c5.jpg',
+                                    earth_date: '2015-05-30',
+                                    camera: {
+                                        name: 'RHAZ_RIGHT_B',
+                                        full_name: 'Rear Hazard Avoidance Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100006,
+                                    sol: 900,
+                                    img_src: 'rover-images/curiosity/c6.jpg',
+                                    earth_date: '2015-02-16',
+                                    camera: {
+                                        name: 'MASTCAM',
+                                        full_name: 'Mast Camera'
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100007,
+                                    sol: 800,
+                                    img_src: 'rover-images/curiosity/c7.jpg',
+                                    earth_date: '2015-02-16',
+                                    camera: {
+                                        name: 'FHAZ_LEFT_B',
+                                        full_name: 'Front Hazard Avoidance Camera '
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                                {
+                                    id: 100008,
+                                    sol: 700,
+                                    img_src: 'rover-images/curiosity/c8.jpg',
+                                    earth_date: '2014-07-26',
+                                    camera: {
+                                        name: 'FHAZ_LEFT_B',
+                                        full_name: 'Front Hazard Avoidance Camera '
+                                    },
+                                    rover: {
+                                        name: 'Curiosity'
+                                    }
+                                },
+                            ]
+                        }
+                    ]
+                }
+            };
+
+            const themes = [
+                {
+                    id: 'tharsis',
+                    label: 'Tharsis',
+                    blurb: {
+                        look: 'Deep charcoal reds with warm, rosy text. Moody but inviting—cockpit energy.',
+                    },
+                    tokens: {
+                        '--panel-bg': '#190707',
+                        '--font-color': '#FFECEA',
+                        '--font-color-muted': '#F0B5AF',
+                        '--heading-color': '#FFD8D2',
+                        '--border': '#5A1A1A',
+                        '--border-radius': '10px',
+                        '--accent': '#FF3B30',
+                        '--accent-contrast': '#1A0505',
+                    },
+                },
+                {
+                    id: 'noctis',
+                    label: 'Noctis',
+                    blurb: {
+                        look: 'Dark plum base with soft blush text—cozy and modern.',
+                    },
+                    tokens: {
+                        '--panel-bg': '#160B12',
+                        '--font-color': '#FFF0FA',
+                        '--font-color-muted': '#F2B6D0',
+                        '--heading-color': '#FFE0F0',
+                        '--border': '#3F1428',
+                        '--border-radius': '10px',
+                        '--accent': '#FF6E8A',
+                        '--accent-contrast': '#19080C',
+                    },
+                },
+                {
+                    id: 'cydonia',
+                    label: 'Cydonia',
+                    blurb: {
+                        look: 'Inky blue background with crisp, icy text—clean and fast.',
+                    },
+                    tokens: {
+                        '--panel-bg': '#0A151D',
+                        '--font-color': '#EAF9FF',
+                        '--font-color-muted': '#BDE2F0',
+                        '--heading-color': '#DDF4FF',
+                        '--border': '#183241',
+                        '--border-radius': '10px',
+                        '--accent': '#2EE7FF',
+                        '--accent-contrast': '#03151A',
+                    },
+                },
+                {
+                    id: 'jezero',
+                    label: 'Jezero',
+                    blurb: {
+                        look: 'Dark, forest-leaning base with fresh minty text—breathable and grounded.',
+                    },
+                    tokens: {
+                        '--panel-bg': '#0F1714',
+                        '--font-color': '#EAFBF4',
+                        '--font-color-muted': '#BFE8D9',
+                        '--heading-color': '#D7FFF4',
+                        '--border': '#1E3A33',
+                        '--border-radius': '10px',
+                        '--accent': '#2DE2C5',
+                        '--accent-contrast': '#051613',
+                    },
+                },
+            ];
+
+            const styleOf = (t) =>
+                Object.fromEntries(Object.entries(t.tokens).map(([k, v]) => [k, String(v)]));
+
+            // ------------------------------------------------------------------
+            // MOUNT: NO API CALLS, JUST STATIC DATA
+            // ------------------------------------------------------------------
+            onMounted(() => {
+                let initial = 'tharsis';
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (THEME_CLASSES.includes(saved)) initial = saved;
+                } catch {}
+                applyTheme(initial);
+
+                // Use static data instead of NASA API
+                nasaRoverData.value = STATIC_ROVER_DATA;
+                status.value = 'ready';
+                errorMsgValue.value = '';
+
+                if (slides.value.length > 1) start();
+            });
+
+            onUnmounted(() => { stop(); stopModal(); });
+
+            return {
+                // Status
+                status, errorMsgValue,
+                // Data
+                nasaRoverData,
+                // Hero slideshow
+                activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
+                // Header selection
+                activeAction, activeGallery,
+                // Modal slideshow
+                isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
+                modalNext, modalPrev, startModal, stopModal, wasPlaying,
+                // Utils
+                fmtDate,
+                // Gallery
+                page, pageCount, pageItems, canPrev, canNext, prevPage, nextPage, goToPage, galleryAll, pagesCompact,
+                // Theme
+                themes, styleOf, changeTheme, CURRENT_THEME, viewIcon, seperateIcon,
+            };
         }
-      }
-
-
-      // =====================================================
-      // =============== DATA FETCH =================
-      // =====================================================
-      // async function getNasaRoverData() {
-      //   status.value = 'loading';
-      //   errorMsgValue.value = '';
-      //   try {
-      //     const api_key = 'DEMO_KEY'; // works out-of-the-box (rate-limited). Replace with your key if you want.
-      //     const rovers  = ['perseverance', 'curiosity'];
-      //     const results = {};
-      //
-      //     for (const rover of rovers) {
-      //       // Manifest
-      //       const manifestUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/manifests/${rover}`);
-      //       manifestUrl.search = new URLSearchParams({ api_key }).toString();
-      //       const res = await fetch(manifestUrl);
-      //       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      //       const json = await res.json();
-      //       const manifest = { [rover]: json.photo_manifest ?? json };
-      //
-      //       delete manifest[rover].photos;
-      //
-      //       let aggregated = [];
-      //       if (rover === 'perseverance' || rover === 'curiosity') {
-      //         const maxSol = Number(manifest[rover].max_sol) || 0;
-      //         const solUrl = new URL(`https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos`);
-      //         solUrl.search = new URLSearchParams({ api_key, sol: String(maxSol) }).toString();
-      //         const r = await fetch(solUrl);
-      //         if (!r.ok) continue;
-      //         const { photos = [] } = await r.json();
-      //         if (!photos.length) continue;
-      //         aggregated.push(...photos);
-      //       }
-      //
-      //       const key = (manifest[rover].name || rover).toLowerCase();
-      //       const entry = {
-      //         ...manifest[rover],
-      //         recentPhotos: [
-      //           { sol: manifest[rover].max_sol ?? null, photos: aggregated }
-      //         ]
-      //       };
-      //       results[key] = entry;
-      //     }
-      //
-      //     nasaRoverData.value = results;
-      //     cacheData('nasaRoverData', nasaRoverData.value, ONE_DAY);
-      //     status.value = 'ready';
-      //     if (slides.value.length > 1) start();
-      //   } catch (e) {
-      //     status.value = 'error';
-      //     errorMsgValue.value = 'Unable to fetch data: ' + String(e.message || e);
-      //   }
-      // }
-
-      // Date formatter
-      function fmtDate(iso, locale = 'en-GB') {
-        if (!iso) return '';
-        const [y, m, d] = iso.split('-').map(Number);
-        const dt = new Date(Date.UTC(y, m - 1, d));
-        return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
-      }
-
-      const themes = [
-        {
-          id: 'tharsis',
-          label: 'Tharsis',
-          blurb: {
-            look: 'Deep charcoal reds with warm, rosy text. Moody but inviting—cockpit energy.',
-          },
-          tokens: {
-            '--panel-bg': '#190707',
-            '--font-color': '#FFECEA',
-            '--font-color-muted': '#F0B5AF',
-            '--heading-color': '#FFD8D2',
-            '--border': '#5A1A1A',
-            '--border-radius': '10px',
-            '--accent': '#FF3B30',
-            '--accent-contrast': '#1A0505',
-          },
-        },
-        {
-          id: 'noctis',
-          label: 'Noctis',
-          blurb: {
-            look: 'Dark plum base with soft blush text—cozy and modern.',
-          },
-          tokens: {
-            '--panel-bg': '#160B12',
-            '--font-color': '#FFF0FA',
-            '--font-color-muted': '#F2B6D0',
-            '--heading-color': '#FFE0F0',
-            '--border': '#3F1428',
-            '--border-radius': '10px',
-            '--accent': '#FF6E8A',
-            '--accent-contrast': '#19080C',
-          },
-        },
-        {
-          id: 'cydonia',
-          label: 'Cydonia',
-          blurb: {
-            look: 'Inky blue background with crisp, icy text—clean and fast.',
-          },
-          tokens: {
-            '--panel-bg': '#0A151D',
-            '--font-color': '#EAF9FF',
-            '--font-color-muted': '#BDE2F0',
-            '--heading-color': '#DDF4FF',
-            '--border': '#183241',
-            '--border-radius': '10px',
-            '--accent': '#2EE7FF',
-            '--accent-contrast': '#03151A',
-          },
-        },
-        {
-          id: 'jezero',
-          label: 'Jezero',
-          blurb: {
-            look: 'Dark, forest-leaning base with fresh minty text—breathable and grounded.',
-          },
-          tokens: {
-            '--panel-bg': '#0F1714',
-            '--font-color': '#EAFBF4',
-            '--font-color-muted': '#BFE8D9',
-            '--heading-color': '#D7FFF4',
-            '--border': '#1E3A33',
-            '--border-radius': '10px',
-            '--accent': '#2DE2C5',
-            '--accent-contrast': '#051613',
-          },
-        },
-      ];
-
-      const styleOf = (t) =>
-        Object.fromEntries(Object.entries(t.tokens).map(([k, v]) => [k, String(v)]));
-
-      onMounted(async () => {
-        let initial = 'tharsis';
-        try {
-          const saved = localStorage.getItem(THEME_KEY);
-          if (THEME_CLASSES.includes(saved)) initial = saved;
-        } catch {}
-        applyTheme(initial);
-
-        const ok = checkCachedData('nasaRoverData');
-        if (!ok) {
-          await getNasaRoverData();
-        } else {
-          if (slides.value.length > 1) start();
-        }
-      });
-
-      onUnmounted(() => { stop(); stopModal(); });
-
-      return {
-        // Status
-        status, errorMsgValue,
-        // Data
-        nasaRoverData,
-        // Hero slideshow
-        activeRover, activeRoverLabel, current, next, prev, start, stop, slides, startGuarded,
-        // Header selection
-        activeAction, activeGallery,
-        // Modal slideshow
-        isModalOpen, modalPhoto, modalBackdrop, openPhoto, closeModal, openRandomPhoto,
-        modalNext, modalPrev, startModal, stopModal, wasPlaying,
-        // Utils
-        fmtDate,
-        // Gallery
-        page, pageCount, pageItems, canPrev, canNext, prevPage, nextPage, goToPage, galleryAll, pagesCompact,
-        // Theme
-        themes, styleOf, changeTheme, CURRENT_THEME, viewIcon, seperateIcon,
-      };
-    }
-  }).mount('#app');
+    }).mount('#app');
 </script>
+
 </body>
 </html>

@@ -587,14 +587,16 @@ main {
 
 .modal {
   position: relative;
-  max-width: 96vw; max-height: 96vh;
+  max-width: 96vw;
+  max-height: 96vh;
   border: 1px solid var(--border);
   background: var(--panel-bg);
 }
 
 .modal img {
   display: block;
-  max-width: 95vw;
+  /*max-width: 95vw;*/
+  min-width: 100% !important;
   max-height: 90vh;
   width: auto; height: auto;
 }
