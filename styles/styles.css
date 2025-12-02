@@ -264,7 +264,7 @@ main {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
-  margin-bottom: 10rem;
+  /*margin-bottom: 10rem;*/
 }
 
 .gallery-item {
@@ -596,6 +596,7 @@ main {
 .modal img {
   display: block;
   /*max-width: 95vw;*/
+    padding: 0 !important;
   min-width: 100% !important;
   max-height: 90vh;
   width: auto; height: auto;
