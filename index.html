@@ -190,11 +190,11 @@
         </div>
           <div class="rover-data info launched">
           <span class="info-left">Launched: </span>
-          <span class="info-right">07 July 2003</span>
+          <span class="info-right">07.11.2003</span>
         </div>
         <div class="rover-data info landed">
           <span class="info-left">Landed: </span>
-          <span class="info-right">25 January 2004</span>
+          <span class="info-right">25.01.2004</span>
         </div>
         <div class="rover-data info sol">
           <span class="info-left">Max Sol: </span>
@@ -202,7 +202,7 @@
         </div>
         <div class="rover-data info date">
           <span class="info-left">Max date: </span>
-          <span class="info-right">11 June 2018</span>
+          <span class="info-right">11.06.2018</span>
         </div>
         <div class="rover-data info photos">
           <span class="info-left">Total Photos: </span>
@@ -217,11 +217,11 @@
         </div>
         <div class="rover-data info launched">
           <span class="info-left">Launched: </span>
-          <span class="info-right">10 June 2003</span>
+          <span class="info-right">10.06.2003</span>
         </div>
         <div class="rover-data info landed">
           <span class="info-left">Landed: </span>
-          <span class="info-right">04 January 2004</span>
+          <span class="info-right">04.01.2004</span>
         </div>
         <div class="rover-data info sol">
           <span class="info-left">Max Sol: </span>
@@ -229,7 +229,7 @@
         </div>
         <div class="rover-data info date">
           <span class="info-left">Max date: </span>
-          <span class="info-right">21 March 2010</span>
+          <span class="info-right">21.03.2010</span>
         </div>
         <div class="rover-data info photos">
           <span class="info-left">Total Photos: </span>
@@ -576,11 +576,13 @@
             function goToPage(p){ if (p >= 1 && p <= pageCount.value) page.value = p; }
 
             // Date formatter
-            function fmtDate(iso, locale = 'en-GB') {
+            function fmtDate(iso) {
                 if (!iso) return '';
                 const [y, m, d] = iso.split('-').map(Number);
-                const dt = new Date(Date.UTC(y, m - 1, d));
-                return dt.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+                // Zero-pad day and month
+                const dd = String(d).padStart(2, '0');
+                const mm = String(m).padStart(2, '0');
+                return `${dd}.${mm}.${y}`;
             }
 
             // ------------------------------------------------------------------
