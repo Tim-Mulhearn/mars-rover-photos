@@ -595,8 +595,8 @@ main {
 
 .modal img {
   display: block;
-  /*max-width: 95vw;*/
-    padding: 0 !important;
+  max-width: 95vw;
+  padding: 0 !important;
   min-width: 100% !important;
   max-height: 90vh;
   width: auto; height: auto;
