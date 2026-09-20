@@ -235,7 +235,6 @@ main {
   gap: 0.5rem 1.25rem;
   margin-bottom: var(--section-bottom);
   padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--border-strong);
 }
 
 .main-header .title {
@@ -245,6 +244,7 @@ main {
   line-height: 0.95;
   letter-spacing: 0.01em;
   color: var(--heading-color);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .main-header .home { margin-left: auto; }
