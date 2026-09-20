@@ -1,25 +1,3 @@
-/* ==========================================================================
-   MARS ROVER PHOTOS: "Survey" edition
-   --------------------------------------------------------------------------
-   A drop-in replacement. Every class name, theme name (tharsis, noctis,
-   cydonia, jezero) and custom-property name from the original is kept.
-
-   Ideas behind the look
-   - Each theme is a painted wall, not near-black: deep oxide, plum, ocean
-     and lake tones that the photos sit against like prints in a gallery.
-   - The hero is a camera viewfinder. Its corner brackets lock on once
-     when the photo loads. That is the only ambient motion on the page.
-   - Grid captions are a frosted strip along the bottom of each photo,
-     layered exactly like the original so click handling is unchanged.
-   - Type: Big Shoulders Display (condensed, like hardware stencilling)
-     for names and headings; Instrument Sans for everything else.
-
-   Tuning
-   --pager-offset  the original pulled the pager up with margin-top: -6.25rem.
-                   Kept as a variable so you can zero it if your markup
-                   doesn't need that pull.
-   ========================================================================== */
-
 @import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap");
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -293,9 +271,22 @@ main {
     .main-header .random-photo,
     .main-header .theme,
     .main-gallery.perseverance,
-    .main-gallery.curiosity):is(:hover, :focus-visible, :active) {
+    .main-gallery.curiosity):is(:focus-visible, :active) {
   color: var(--heading-color);
   text-decoration-color: var(--accent);
+}
+
+/* Hover styles only where a real pointer exists, so taps on touch screens don't leave things stuck highlighted */
+@media (hover: hover) {
+  :is(.main-header .home,
+      .main-header .gallery,
+      .main-header .random-photo,
+      .main-header .theme,
+      .main-gallery.perseverance,
+      .main-gallery.curiosity):hover {
+    color: var(--heading-color);
+    text-decoration-color: var(--accent);
+  }
 }
 
 .main-header .is-active,
@@ -330,13 +321,22 @@ main {
   line-height: 1;
   cursor: pointer;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.nav:hover {
+.nav:active {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
+}
+
+@media (hover: hover) {
+  .nav:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+  }
 }
 
 .nav.prev { left: 1.25rem; }
@@ -364,9 +364,16 @@ main {
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.image-info-view:hover {
+.image-info-view:active {
   background: var(--panel-bg);
   border-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .image-info-view:hover {
+    background: var(--panel-bg);
+    border-color: var(--accent);
+  }
 }
 
 .image-info-view img {
@@ -616,10 +623,18 @@ main {
   transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 }
 
-.pager-btn:hover:not([disabled]),
-.pager-num:hover {
+.pager-btn:active:not([disabled]),
+.pager-num:active {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+@media (hover: hover) {
+  .pager-btn:hover:not([disabled]),
+  .pager-num:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 
 .pager-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
@@ -706,19 +721,22 @@ main {
   box-shadow: 0 0 0 1px var(--accent);
 }
 
-.rover.active:hover,
-.rover.active:active,
-.rover.active:focus {
+.rover.active { cursor: pointer; }
+
+.rover.active:active {
   background: var(--rover-status-background-active);
   border-color: var(--border-strong);
-  cursor: pointer;
 }
 
-.rover.active.selected:hover { border-color: var(--accent); }
+@media (hover: hover) {
+  .rover.active:hover {
+    background: var(--rover-status-background-active);
+    border-color: var(--border-strong);
+  }
+  .rover.active.selected:hover { border-color: var(--accent); }
+}
 
-.rover.complete:hover,
-.rover.complete:active,
-.rover.complete:focus { cursor: not-allowed; }
+.rover.complete { cursor: not-allowed; }
 
 /* One row per fact, ruled like a spec sheet */
 .rover-data {
@@ -840,12 +858,18 @@ main {
   border-radius: 3px;
 }
 
-.theme-card:hover,
-.theme-card:focus,
+.theme-card { cursor: pointer; }
+
 .theme-card:active {
   border-color: var(--border-strong);
   background: var(--rover-status-background-active);
-  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .theme-card:hover {
+    border-color: var(--border-strong);
+    background: var(--rover-status-background-active);
+  }
 }
 
 .theme-card.selected {
@@ -918,9 +942,16 @@ main {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.modal-close:hover {
+.modal-close:active {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+@media (hover: hover) {
+  .modal-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 
 .modal-caption {
@@ -967,9 +998,16 @@ main {
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
-.github-information a:hover {
+.github-information a:active {
   color: var(--accent);
   text-decoration-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .github-information a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
 }
 
 
