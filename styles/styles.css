@@ -1,735 +1,1064 @@
-* { box-sizing: border-box; }
+/* ==========================================================================
+   MARS ROVER PHOTOS: "Survey" edition
+   --------------------------------------------------------------------------
+   A drop-in replacement. Every class name, theme name (tharsis, noctis,
+   cydonia, jezero) and custom-property name from the original is kept.
 
-/* Main theme - Red */
+   Ideas behind the look
+   - Each theme is a painted wall, not near-black: deep oxide, plum, ocean
+     and lake tones that the photos sit against like prints in a gallery.
+   - The hero is a camera viewfinder. Its corner brackets lock on once
+     when the photo loads. That is the only ambient motion on the page.
+   - Grid captions are a frosted strip along the bottom of each photo,
+     layered exactly like the original so click handling is unchanged.
+   - Type: Big Shoulders Display (condensed, like hardware stencilling)
+     for names and headings; Instrument Sans for everything else.
+
+   Tuning
+   --pager-offset  the original pulled the pager up with margin-top: -6.25rem.
+                   Kept as a variable so you can zero it if your markup
+                   doesn't need that pull.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap");
+
+*, *::before, *::after { box-sizing: border-box; }
+
+
+/* ==========================================================================
+   1. Tokens shared by every theme
+   ========================================================================== */
+
+:root {
+  --font-display: "Big Shoulders Display", "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --font-body: "Instrument Sans", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --font-weight-normal: 400;
+  --font-weight-bold: 600;
+  --font-weight-very-bold: 800;
+
+  --font-size: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-smallest: 0.75rem;
+  --font-size-large: 1.35rem;
+  --font-size-very-large: 1.75rem;
+
+  --section-bottom: 1.5rem;
+  --border-radius: 10px;   /* cards, rows, modal */
+  --radius-sm: 6px;        /* buttons, pager */
+  --radius-lg: 18px;       /* hero viewfinder */
+
+  --pager-offset: -6.25rem;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+
+/* ==========================================================================
+   2. Themes: four regions of Mars
+   Tokens per theme: wall, ink, edges, panels, accent, status.
+   Tharsis is also the default when no theme class is present.
+   ========================================================================== */
+
+/* Tharsis: volcanic iron oxide (red) */
+:root,
 body.tharsis {
-  --main-body-background: #0F0606;
+  --main-body-background: #3A130B;   /* middle stop, also the fallback colour */
+  --bg-top: #1E0805;
+  --bg-bottom: #451710;
 
-  --font-color: #FFECEA;
-  --font-color-muted: #F0B5AF;
-  --heading-color: #FFD8D2;
+  --font-color: #FFEFE6;
+  --font-color-muted: #E9B9A3;
+  --heading-color: #FFF8F3;
 
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --font-weight-very-bold: 800;
+  --border: #64291A;
+  --border-strong: #8A3C26;
 
-  --font-size: 1rem;
-  --font-size-small: 0.8rem;
-  --font-size-smallest: 0.6rem;
-  --font-size-large: 1.3rem;
-  --font-size-very-large: 1.6rem;
+  --panel-bg: #4A1B10;
+  --panel-bg-inactive: #310F08;
+  --overlay-bg: rgba(43, 14, 8, 0.78);
 
-  --section-bottom: 1rem;
-  --border-radius: 10px;
-  --border: #5A1A1A;
-  --border-strong: #7A2525;
+  --accent: #FF9A5C;
+  --accent-contrast: #33100A;
+  --error: #FF6B8A;
 
-  --panel-bg: #190707;
-  --panel-bg-inactive: #100404;
-  --overlay-bg: rgba(32, 8, 8, .82);
-
-  --accent: #FF3B30;
-  --accent-contrast: #1A0505;
-  --error: #FF2D55;
-
-  --rover-status-background-active: #2A0C0D;
+  --rover-status-background-active: #6A2A18;
   --rover-status-background-complete: var(--accent);
-  --rover-status-complete: #120505;
-  --rover-status-text: #FFD1CC;
+  --rover-status-complete: #2C0D07;
+  --rover-status-text: #FFD9C6;
 }
 
-/* Purple theme */
+/* Noctis: Noctis Labyrinthus, dusk canyons (purple) */
 body.noctis {
-  --main-body-background: #0E090B;
+  --main-body-background: #2B1235;   /* middle stop, also the fallback colour */
+  --bg-top: #180820;
+  --bg-bottom: #371745;
 
-  --font-color: #FFF0FA;
-  --font-color-muted: #F2B6D0;
-  --heading-color: #FFE0F0;
+  --font-color: #FBEFFF;
+  --font-color-muted: #D8B4E6;
+  --heading-color: #FFF7FF;
 
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --font-weight-very-bold: 800;
+  --border: #55296A;
+  --border-strong: #78409A;
 
-  --font-size: 1rem;
-  --font-size-small: 0.8rem;
-  --font-size-smallest: 0.6rem;
-  --font-size-large: 1.3rem;
-  --font-size-very-large: 1.6rem;
+  --panel-bg: #3B1B49;
+  --panel-bg-inactive: #250F2D;
+  --overlay-bg: rgba(31, 11, 40, 0.78);
 
-  --section-bottom: 1rem;
-  --border-radius: 10px;
-  --border: #3F1428;
-  --border-strong: #5A1A39;
+  --accent: #F0A1FF;
+  --accent-contrast: #2A1033;
+  --error: #FF7A7A;
 
-  --panel-bg: #160B12;
-  --panel-bg-inactive: #10070D;
-  --overlay-bg: rgba(32,12,24,.80);
-
-  --accent: #FF6E8A;
-  --accent-contrast: #19080C;
-  --error: #FF3B5E;
-
-  --rover-status-background-active: #240F19;
+  --rover-status-background-active: #57286C;
   --rover-status-background-complete: var(--accent);
-  --rover-status-complete: #120505;
-  --rover-status-text: #FFD6E4;
+  --rover-status-complete: #220C29;
+  --rover-status-text: #F5D6FF;
 }
 
-/* Blue theme */
+/* Cydonia: polar ice and old shorelines (blue) */
 body.cydonia {
-  --main-body-background: #071017;
+  --main-body-background: #0A2B3A;   /* middle stop, also the fallback colour */
+  --bg-top: #051822;
+  --bg-bottom: #0E3547;
 
-  --font-color: #EAF9FF;
-  --font-color-muted: #BDE2F0;
-  --heading-color: #DDF4FF;
+  --font-color: #EAFAFF;
+  --font-color-muted: #A8D6E8;
+  --heading-color: #F5FDFF;
 
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --font-weight-very-bold: 800;
+  --border: #1F5670;
+  --border-strong: #2E7897;
 
-  --font-size: 1rem;
-  --font-size-small: 0.8rem;
-  --font-size-smallest: 0.6rem;
-  --font-size-large: 1.3rem;
-  --font-size-very-large: 1.6rem;
+  --panel-bg: #113B4E;
+  --panel-bg-inactive: #08222F;
+  --overlay-bg: rgba(6, 27, 38, 0.78);
 
-  --section-bottom: 1rem;
-  --border-radius: 10px;
-  --border: #183241;
-  --border-strong: #20475D;
+  --accent: #5FE3FF;
+  --accent-contrast: #062430;
+  --error: #FF7C8C;
 
-  --panel-bg: #0A151D;
-  --panel-bg-inactive: #071018;
-  --overlay-bg: rgba(7,16,23,.82);
-
-  --accent: #2EE7FF;
-  --accent-contrast: #03151A;
-  --error: #FF5C6C;
-
-  --rover-status-background-active: #0E202A;
+  --rover-status-background-active: #1A5570;
   --rover-status-background-complete: var(--accent);
-  --rover-status-complete: #0D1A22;
-  --rover-status-text: #D7F7FF;
+  --rover-status-complete: #071E29;
+  --rover-status-text: #D2F6FF;
 }
 
-/*!* Green theme *!*/
+/* Jezero: the dry river delta (green) */
 body.jezero {
-  --main-body-background: #0E1210;
+  --main-body-background: #0B2A21;   /* middle stop, also the fallback colour */
+  --bg-top: #061710;
+  --bg-bottom: #0F3529;
 
-  --font-color: #EAFBF4;
-  --font-color-muted: #BFE8D9;
-  --heading-color: #D7FFF4;
+  --font-color: #EBFCF5;
+  --font-color-muted: #A6DCC6;
+  --heading-color: #F5FFFA;
 
-  --font-weight-normal: 300;
-  --font-weight-bold: 600;
-  --font-weight-very-bold: 800;
+  --border: #21594A;
+  --border-strong: #2F7B66;
 
-  --font-size: 1rem;
-  --font-size-small: 0.8rem;
-  --font-size-smallest: 0.6rem;
-  --font-size-large: 1.3rem;
-  --font-size-very-large: 1.6rem;
+  --panel-bg: #113A2E;
+  --panel-bg-inactive: #08211A;
+  --overlay-bg: rgba(6, 28, 21, 0.78);
 
-  --section-bottom: 1rem;
-  --border-radius: 10px;
-  --border: #1E3A33;
-  --border-strong: #285047;
+  --accent: #6CF0C5;
+  --accent-contrast: #05231A;
+  --error: #FF8A8A;
 
-  --panel-bg: #0F1714;
-  --panel-bg-inactive: #0A1210;
-  --overlay-bg: rgba(10,20,18,.82);
-
-  --accent: #2DE2C5;
-  --accent-contrast: #051613;
-  --error: #FF6E7A;
-
-  --rover-status-background-active: #11221D;
+  --rover-status-background-active: #1B5744;
   --rover-status-background-complete: var(--accent);
-  --rover-status-complete: #101B17;
-  --rover-status-text: #D6FFF5;
+  --rover-status-complete: #071E17;
+  --rover-status-text: #D3FFEE;
 }
 
-/* Base */
-.accent-color { color: var(--accent); }
+
+/* ==========================================================================
+   3. Base
+   ========================================================================== */
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background: var(--main-body-background);
+  margin: 0;
+  background-color: var(--main-body-background);
+  /* Deep at the top, warming toward the bottom like a horizon glow.
+     Fixed so it spans the window rather than stretching over a long page. */
+  background-image: linear-gradient(165deg, var(--bg-top) 0%, var(--main-body-background) 45%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--font-color);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 main {
+  width: min(88vw, 82rem);
   margin: 40px auto;
-  width: 70vw;
 }
 
-/* Feedback messages */
+:where(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+  color: var(--heading-color);
+}
+
+.accent-color { color: var(--accent); }
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+
+/* ==========================================================================
+   4. Feedback messages
+   ========================================================================== */
+
 .loading-message,
 .error-message {
-  margin: 3rem;
+  max-width: 34rem;
+  margin: 3rem auto;
+  padding: 1.25rem 1.5rem;
   text-align: center;
   font-size: var(--font-size-large);
   color: var(--font-color-muted);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--border-radius);
 }
 
-.error-message { color: var(--error); }
+.loading-message { animation: pulse 1.8s ease-in-out infinite; }
 
-/* Header and Nav */
+.error-message {
+  color: var(--error);
+  border: 1px solid var(--error);
+  background: rgba(255, 90, 110, 0.08);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+
+/* ==========================================================================
+   5. Header and navigation
+   ========================================================================== */
+
 .main-header {
   display: flex;
-  align-items: center;
-  gap: .75rem;
+  align-items: baseline;
   flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
   margin-bottom: var(--section-bottom);
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .main-header .title {
-  font-size: var(--font-size-very-large);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
   font-weight: var(--font-weight-very-bold);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
   color: var(--heading-color);
-}
-
-.main-header .home,
-.main-header .gallery,
-.main-header .random-photo,
-.main-header .theme,
-.main-gallery.perseverance,
-.main-gallery.curiosity {
-  color: var(--accent);
-  cursor: pointer;
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
 }
 
 .main-header .home { margin-left: auto; }
-.main-header .gallery,
-.main-header .random-photo { margin-left: .5rem; }
 
-.main-header .home:hover,
-.main-header .home:focus,
-.main-header .home:active,
-.main-header .gallery:hover,
-.main-header .gallery:focus,
-.main-header .gallery:active,
-.main-header .theme:hover,
-.main-header .theme:focus,
-.main-header .theme:active,
-.main-gallery.perseverance:hover,
-.main-gallery.perseverance:focus,
-.main-gallery.perseverance:active,
-.main-gallery.curiosity:hover,
-.main-gallery.curiosity:focus,
-.main-gallery.curiosity:active,
-.main-header .random-photo:hover,
-.main-header .random-photo:active,
-.main-header .random-photo:focus { border-bottom-color: var(--accent); }
+/* Every nav link and rover tab: quiet until you point at it, then an accent underline */
+:is(.main-header .home,
+    .main-header .gallery,
+    .main-header .random-photo,
+    .main-header .theme,
+    .main-gallery.perseverance,
+    .main-gallery.curiosity) {
+  color: var(--font-color-muted);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.45em;
+  cursor: pointer;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+:is(.main-header .home,
+    .main-header .gallery,
+    .main-header .random-photo,
+    .main-header .theme,
+    .main-gallery.perseverance,
+    .main-gallery.curiosity):is(:hover, :focus-visible, :active) {
+  color: var(--heading-color);
+  text-decoration-color: var(--accent);
+}
 
 .main-header .is-active,
-.main-gallery-section .is-active { border-bottom-color: var(--accent); }
-
-/* Main Gallery */
-.main-gallery-section {
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
-.pager {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: .5rem;
-  /*margin-top: 1rem;*/
-  margin-top: -6.25rem;
-  margin-bottom: 1rem;
-}
-
-.pager-btn, .pager-num {
-  padding: .35rem .6rem;
-  border: 1px solid var(--border, #334);
-  background: transparent;
-  color: inherit;
-  border-radius: .4rem;
-  cursor: pointer;
-}
-
-.pager-btn[disabled] { opacity: .5; cursor: not-allowed; }
-.pager-num.is-active { font-weight: 700; outline: 2px solid var(--accent); }
-.pager-ellipsis { padding: 0 .25rem; user-select: none; }
-
-.main-gallery.perseverance,
-.main-gallery.curiosity { margin-right: 1rem; }
-
-.main-gallery-wrapper { margin-top: 2.5rem; }
-
-.main-gallery-images {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  /*margin-bottom: 10rem;*/
-}
-
-.gallery-item {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
-}
-
-.gallery-item-image-info,
-.image-info {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 1rem;
-  background: var(--overlay-bg);
-  border-radius: 0;
-  color: var(--font-color);
-  font-size: var(--font-size);
-}
-
-.gallery-item .image-info-view {
-  position: absolute;
-  bottom: 3.5rem;
-  right: 0;
-  padding: 0.5rem;
-  font-size: var(--font-size-small);
-  display: inline-flex;
-  align-items: center;
-  gap: .4em;
-  line-height: 1;
-  /*background: var(--overlay-bg);*/
-  border-radius: 0;
-  color: var(--font-color);
-  cursor: pointer;
-  user-select: none;
-}
-
-.gallery-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
-
-.bullet-point {
-  color: var(--accent);
-}
-/* Theme */
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.theme-card {
-  background: var(--panel-bg);
-  color: var(--font-color);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  padding: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.18);
-}
-
-.theme-card .heading {
+.main-gallery-section .is-active {
   color: var(--heading-color);
-  margin: 0 0 6px;
-  font-weight: 800;
+  text-decoration-color: var(--accent);
 }
 
-.theme-card .muted {
-  color: var(--font-color-muted);
-  margin: 0 0 8px;
-}
 
-.theme-card .bullets {
-  margin: 0 10px 10px 18px;
-}
+/* ==========================================================================
+   6. Shared controls: round arrows and the "view" chip
+   ========================================================================== */
 
-.theme-card .bullets li {
-  margin: 4px 0;
-}
-
-.theme-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.theme-card-head .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-}
-
-/* tiny swatches */
-.swatches {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.swatch {
-  width: 18px;
-  height: 12px;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,.15);
-}
-
-.theme-card:hover,
-.theme-card:focus,
-.theme-card:active {
-  cursor: pointer;
-  background: rgba(0,0,0,.12);
-}
-
-.theme-card.selected {
-  box-shadow: 0 0 0 1px var(--accent);
-  border: 1px solid var(--accent);
-  transform: scale(1.01);
-}
-
-/* Main section */
-.main-image-section .image-info-view {
+.nav {
   position: absolute;
-  top: 23rem;
-  right: 0;
-  padding: 0.5rem;
-  font-size: var(--font-size);
-  display: inline-flex;
-  align-items: center;
-  gap: .4em;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  color: var(--heading-color);
+  font: inherit;
+  font-size: 1.75rem;
   line-height: 1;
-  /*background: var(--overlay-bg);*/
-  border-radius: 0;
-  color: var(--font-color);
   cursor: pointer;
   user-select: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.nav:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.nav.prev { left: 1.25rem; }
+.nav.next { right: 1.25rem; }
+
+.image-info-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  color: var(--heading-color);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.image-info-view:hover {
+  background: var(--panel-bg);
+  border-color: var(--accent);
 }
 
 .image-info-view img {
-  width: 2.5rem;
-  height: 2.5rem;
   display: block;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
-/* Hero / Main image */
+
+/* ==========================================================================
+   7. Hero: the viewfinder
+   ========================================================================== */
+
 .main-image-section {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  height: 400px;
+  height: clamp(18.5rem, 44vw, 30rem);
   margin: 0 auto var(--section-bottom);
-  border-radius: var(--border-radius);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background-color: var(--panel-bg-inactive);
   background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
 }
 
-.image-info { width: 25%; }
+/* Corner brackets. Eight thin gradients draw four L-shapes; they close in
+   from the edges once when the photo appears, like autofocus locking on. */
+.main-image-section::before {
+  --arm: 1.5rem;
+  --stroke: 2px;
+  --bar: linear-gradient(var(--accent), var(--accent));
+  content: "";
+  position: absolute;
+  inset: 0.625rem;
+  pointer-events: none;
+  background:
+    var(--bar) top left     / var(--arm) var(--stroke) no-repeat,
+    var(--bar) top left     / var(--stroke) var(--arm) no-repeat,
+    var(--bar) top right    / var(--arm) var(--stroke) no-repeat,
+    var(--bar) top right    / var(--stroke) var(--arm) no-repeat,
+    var(--bar) bottom left  / var(--arm) var(--stroke) no-repeat,
+    var(--bar) bottom left  / var(--stroke) var(--arm) no-repeat,
+    var(--bar) bottom right / var(--arm) var(--stroke) no-repeat,
+    var(--bar) bottom right / var(--stroke) var(--arm) no-repeat;
+  animation: frame-lock 0.75s var(--ease) both;
+}
+
+@keyframes frame-lock {
+  from { inset: 2.75rem; opacity: 0; }
+  to   { inset: 0.625rem; opacity: 1; }
+}
+
+/* Caption plate, bottom left */
+.image-info {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  width: min(22rem, calc(100% - 2.5rem));
+  padding: 1rem 1.15rem 1.05rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--border-radius);
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  color: var(--font-color);
+  font-size: var(--font-size-small);
+  line-height: 1.55;
+}
+
+/* A small tab on the plate's top edge */
+.image-info::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 1.15rem;
+  width: 2.25rem;
+  height: 3px;
+  background: var(--accent);
+}
 
 .image-info-data.title {
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-very-bold);
-  padding-bottom: 0.5rem;
   display: block;
-  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: var(--font-weight-very-bold);
+  line-height: 1;
+  letter-spacing: 0.01em;
   color: var(--heading-color);
 }
 
 .image-info-data:not(.title) {
-  font-size: var(--font-size);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-normal);
 }
 
-.image-info-view {
-  height: 2rem;
-  width: 3rem;
-  align-items: center;
+.bullet-point {
+  padding: 0 0.3em;
+  color: var(--accent);
 }
 
-/*.mars-icon {*/
-/*  display: inline-block;*/
-/*  width: 0.95em;*/
-/*  height: 0.95em;*/
-/*  margin: 0 .4em;*/
-/*  background-image: url("../images/mars.png");*/
-/*  background-size: contain;*/
-/*  background-repeat: no-repeat;*/
-/*  background-position: center;*/
-/*  vertical-align: -0.1em;*/
-/*  opacity: .9;*/
-/*}*/
+.main-image-section .image-info-view {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  font-size: var(--font-size);
+}
 
-/* Manifests */
+.clickable { cursor: zoom-in; }
+
+
+/* ==========================================================================
+   8. Gallery
+   ========================================================================== */
+
+.main-gallery-section {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+/* Rover tabs read as big condensed names */
+.main-gallery.perseverance,
+.main-gallery.curiosity {
+  margin-right: 1.25rem;
+  font-family: var(--font-display);
+  font-size: var(--font-size-very-large);
+  font-weight: var(--font-weight-very-bold);
+  letter-spacing: 0.01em;
+}
+
+.main-gallery-wrapper { margin-top: 2.5rem; }
+
+.main-gallery-images {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* Each tile: photo with a frosted caption strip along the bottom.
+   Same layering as the original (info is absolutely positioned over the photo). */
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background: var(--panel-bg);
+  transition: border-color 0.15s ease;
+}
+
+.gallery-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--panel-bg-inactive);
+  position: relative;
+  z-index: 0;
+  transition: transform 0.5s var(--ease);
+}
+
+.gallery-item-image-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;   /* stays above the photo while it zooms on hover */
+  padding: 0.6rem 0.85rem 0.7rem;
+  border-top: 1px solid var(--border-strong);
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  color: var(--font-color);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.gallery-item .image-info-data.title {
+  margin-bottom: 0.1rem;
+  font-size: 1.25rem;
+}
+
+.gallery-item-image-info .image-info-data:not(.title) {
+  color: var(--font-color-muted);
+  font-size: var(--font-size-small);
+}
+
+/* View chip: sits just above the caption strip, right side.
+   Same anchoring idea as the original (offset from the bottom, right edge). */
+.gallery-item .image-info-view {
+  position: absolute;
+  z-index: 2;
+  bottom: 4.25rem;
+  right: 0.6rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 0.6rem;
+}
+
+@media (hover: hover) {
+  .gallery-item:hover { border-color: var(--accent); }
+  .gallery-item:hover .gallery-image { transform: scale(1.04); }
+}
+
+
+/* ==========================================================================
+   9. Pager
+   ========================================================================== */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: var(--pager-offset);
+  margin-bottom: 1rem;
+  /* If the offset pulls the pager over the grid, clicks still reach the photos;
+     only the buttons themselves catch clicks. */
+  pointer-events: none;
+}
+
+.pager > * { pointer-events: auto; }
+
+.pager-btn,
+.pager-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--font-color);
+  font: inherit;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.pager-btn:hover:not([disabled]),
+.pager-num:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pager-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+.pager-num.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.pager-ellipsis {
+  padding: 0 0.25rem;
+  color: var(--font-color-muted);
+  user-select: none;
+}
+
+
+/* ==========================================================================
+   10. Rover manifests: spec sheets
+   ========================================================================== */
+
 .main-manifests-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  border-radius: var(--border-radius);
+  gap: 2rem 1.5rem;
   margin: 0 auto var(--section-bottom);
 }
 
 .main-manifest.active,
 .main-manifest.inactive {
-  flex: 1 1 0;
   display: flex;
+  flex: 1 1 0;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 1rem;
+  min-width: 0;
 }
 
 .rover-active-heading,
 .rover-inactive-heading {
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  margin: 0;
+  display: flex;
+  align-items: center;
   flex: 100%;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-very-large);
+  font-weight: var(--font-weight-very-bold);
+  line-height: 1;
   color: var(--heading-color);
 }
 
+/* A filled dot means the mission is live, a hollow ring means it has ended */
+.rover-active-heading::before,
+.rover-inactive-heading::before {
+  content: "";
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex: none;
+}
+.rover-active-heading::before   { background: var(--accent); }
+.rover-inactive-heading::before { border: 2px solid var(--font-color-muted); }
+
 .rover {
   flex: 25%;
-  background: var(--panel-bg);
-  padding: 1rem;
-  border-radius: var(--border-radius);
-  font-size: var(--font-size);
+  min-width: 12rem;
+  padding: 1.15rem 1.25rem 1.1rem;
   border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background: var(--panel-bg);
+  font-size: var(--font-size);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .rover.complete {
   background: var(--rover-status-complete);
+  color: var(--font-color-muted);
 }
+
 .rover.selected {
+  border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
-  border: 1px solid var(--accent);
-  transform: scale(1.01);
-}
-
-.rover-data {
-  display: flex;
-  align-items: baseline;
-  flex: 25%;
-  margin-bottom: 0.5rem;
-}
-
-.rover-data.heading {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size);
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-  color: var(--heading-color);
-}
-
-.rover-data.status .info-right,
-.rover-data.active .info-right {
-  color: var(--rover-status-text);
-  background: var(--rover-status-background-active);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-strong);
 }
 
 .rover.active:hover,
 .rover.active:active,
 .rover.active:focus {
   background: var(--rover-status-background-active);
+  border-color: var(--border-strong);
   cursor: pointer;
 }
 
+.rover.active.selected:hover { border-color: var(--accent); }
+
 .rover.complete:hover,
 .rover.complete:active,
-.rover.complete:focus {
-  cursor: not-allowed;
+.rover.complete:focus { cursor: not-allowed; }
+
+/* One row per fact, ruled like a spec sheet */
+.rover-data {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rover-data:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.rover-data.heading {
+  margin-bottom: 0.25rem;
+  padding: 0 0 0.75rem;
+  border-bottom-color: var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: var(--font-weight-very-bold);
+  line-height: 1;
+  color: var(--heading-color);
+}
+
+.rover-data:not(.heading) .info-left { color: var(--font-color-muted); }
+.rover-data:not(.heading) .info-right { color: var(--heading-color); font-weight: 500; }
+
+.info-left  { margin-right: auto; text-align: left; }
+.info-right { margin-left: auto;  text-align: right; }
+
+.rover-data.status .info-right,
+.rover-data.active .info-right {
+  padding: 0.15rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--rover-status-background-active);
+  color: var(--rover-status-text);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
 }
 
 .rover-data.complete .info-right {
+  border-color: var(--accent);
   background: var(--rover-status-background-complete);
+  color: var(--accent-contrast);
 }
 
-.info-left {
-  margin-right: auto;
-  text-align: left;
-}
-.info-right {
-  margin-left: auto;
-  text-align: right;
+
+/* ==========================================================================
+   11. Theme picker
+   ========================================================================== */
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-/* Slideshow (hero) */
-.main-image-section .nav {
-  position: absolute; top: 50%;
-  transform: translateY(-50%);
-  background: var(--overlay-bg);
-  color: var(--font-color);
+.theme-card {
+  padding: 1.1rem 1.2rem 1.2rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  padding: 0.5rem 1rem;
-  cursor: pointer; user-select: none;
+  background: var(--panel-bg);
+  color: var(--font-color);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.main-image-section .prev,
-.main-image-section .next { font-size: var(--font-size-very-large); }
-.main-image-section .prev { left: 1rem; }
-.main-image-section .next { right: 1rem; }
+.theme-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
+}
 
-/* Modal */
-.clickable { cursor: zoom-in; }
+/* A planet with its orbit ring */
+.theme-card-head .dot {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: 0 0.2rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--panel-bg), 0 0 0 4px var(--accent);
+}
+
+.theme-card .heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: var(--font-weight-very-bold);
+  line-height: 1;
+  color: var(--heading-color);
+}
+
+.theme-card .muted {
+  margin: 0 0 0.75rem;
+  color: var(--font-color-muted);
+}
+
+.theme-card .bullets {
+  margin: 0 0 0.75rem 1.1rem;
+  padding: 0;
+  font-size: var(--font-size-small);
+}
+
+.theme-card .bullets li { margin: 0.3rem 0; }
+.theme-card .bullets li::marker { color: var(--accent); }
+
+.swatches {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.swatch {
+  width: 1.75rem;
+  height: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.theme-card:hover,
+.theme-card:focus,
+.theme-card:active {
+  border-color: var(--border-strong);
+  background: var(--rover-status-background-active);
+  cursor: pointer;
+}
+
+.theme-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+
+/* ==========================================================================
+   12. Modal
+   ========================================================================== */
 
 .modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.85);
-  display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
   outline: none;
+  animation: fade-in 0.18s ease-out;
 }
 
 .modal {
   position: relative;
   max-width: 96vw;
   max-height: 96vh;
-  border: 1px solid var(--border);
+  max-height: 96dvh;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--border-radius);
   background: var(--panel-bg);
+  animation: modal-in 0.22s var(--ease);
 }
 
 .modal img {
   display: block;
+  width: auto;
+  height: auto;
   max-width: 95vw;
+  max-height: calc(96vh - 5.5rem);
+  max-height: calc(96dvh - 5.5rem);
+  border-radius: calc(var(--border-radius) - 1px) calc(var(--border-radius) - 1px) 0 0;
   padding: 0 !important;
   min-width: 100% !important;
-  max-height: 90vh;
-  width: auto; height: auto;
 }
 
 .modal-close {
-  position: absolute; top: .25rem; right: .25rem;
-  background: none;
-  color: var(--accent);
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  color: var(--heading-color);
+  font: inherit;
   font-size: 1.5rem;
-  border: none;
-  padding: .25rem .5rem;
+  line-height: 1;
   cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.modal-close:hover,
-.modal-close:focus { outline: none; }
+.modal-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .modal-caption {
-  margin: 1rem;
+  margin: 0;
+  padding: 0.85rem 1.25rem 1rem;
   text-align: center;
+  color: var(--font-color-muted);
   font-size: var(--font-size);
 }
 
-/* Modal nav arrows (reuse hero look) */
-.modal .nav{
-  position:absolute; top:50%;
-  transform:translateY(-50%);
-  background: var(--overlay-bg);
-  color: var(--font-color);
-  border:1px solid var(--border);
-  border-radius: var(--border-radius);
-  padding:.5rem 1rem;
-  cursor:pointer; user-select:none;
-  z-index: 1;
+.modal .nav.prev { left: 0.75rem; }
+.modal .nav.next { right: 0.75rem; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-.nav.prev,
-.nav.next {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 4rem;
-}
 
-.modal .prev{
-  left:.5rem;
-}
+/* ==========================================================================
+   13. Footer
+   ========================================================================== */
 
-.modal .next{
-  right:.5rem;
-}
-
-/* Footer */
 .nasa-information {
   padding-top: 3.5rem;
   text-align: center;
+  color: var(--font-color-muted);
   font-size: var(--font-size-small);
 }
 
 .github-information {
   padding-top: 1rem;
   text-align: center;
+  color: var(--font-color-muted);
   font-size: var(--font-size-small);
 }
 
 .github-information a {
   color: var(--font-color);
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 0.25em;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
 .github-information a:hover {
   color: var(--accent);
+  text-decoration-color: var(--accent);
 }
 
-/* Media queries */
+
+/* ==========================================================================
+   14. Responsive
+   ========================================================================== */
+
 @media (min-width: 768px) and (max-width: 1023px) {
   main { width: 90vw; }
 
-  .image-info { width: 50%; }
+  .image-info { width: min(20rem, calc(100% - 2.5rem)); }
 
   .rover { flex: 100%; }
 
-  .main-gallery-images { grid-template-columns: repeat(3, 1fr); }
+  .main-gallery-images { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-  .gallery-item-image-info { font-size: var(--font-size-small); }
-
-  .gallery-item-image-info .image-info-view {
-    bottom: 4rem;
-    height: 29px;
-    margin-right: 0;
-  }
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   main {
     width: 95vw;
     margin: 1rem auto;
   }
 
-  .main-header .title { flex: 100% }
+  .main-header .title { flex: 100%; }
   .main-header .home { margin-left: 0; }
 
-  .image-info { width: 100%; }
+  .main-image-section { height: 19rem; }
 
-  /*.main-image-section .prev,*/
-  /*.main-image-section .next { font-size: var(--font-size-small); }*/
-  /*.main-image-section .prev { left: 0.6rem; }*/
-  /*.main-image-section .next { right: 0.6rem; }*/
+  .image-info {
+    left: 1.1rem;
+    bottom: 1.1rem;
+    width: calc(100% - 2.2rem);
+    padding: 0.8rem 0.95rem 0.85rem;
+  }
+
+  .image-info-data.title { font-size: 1.5rem; }
+
+  .main-image-section .image-info-view {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .nav {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.4rem;
+  }
+  .nav.prev { left: 0.75rem; }
+  .nav.next { right: 0.75rem; }
 
   .main-manifest,
   .main-manifest.active,
   .main-manifest.inactive,
   .rover { flex: 100%; }
 
-  .main-image-section .image-info-view {
-    top: 17.6875rem;
+  .main-gallery-images {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
   }
 
-  .main-gallery-images { grid-template-columns: repeat(2, 1fr); }
-
-  .gallery-item-image-info, .image-info { font-size: var(--font-size-small); }
-
-  .gallery-item .image-info-view {
-    height: 2.1875rem;
-    padding: 0.75rem;
-    top: -2.1875rem;
-    bottom: 5rem;
+  .gallery-item-image-info {
+    padding: 0.5rem 0.65rem 0.6rem;
+    font-size: var(--font-size-smallest);
   }
+
+  .gallery-item .image-info-data.title { font-size: 1.05rem; }
+
+  .gallery-item .image-info-view { bottom: 3.6rem; }
 
   .modal-caption {
+    padding: 0.6rem 0.9rem 0.75rem;
     font-size: var(--font-size-small);
-    padding: .2rem;
   }
 
   .grid-4 { grid-template-columns: 1fr; }
+}
+
+
+/* ==========================================================================
+   15. Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
