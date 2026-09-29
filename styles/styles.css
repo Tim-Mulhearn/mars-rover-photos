@@ -26,7 +26,7 @@
   --radius-sm: 6px;        /* buttons, pager */
   --radius-lg: 18px;       /* hero viewfinder */
 
-  --pager-offset: -6.25rem;
+  --pager-offset: 1.5rem;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
