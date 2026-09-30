@@ -16,9 +16,3 @@ Built with vue 3, free to use.
 - Basic a11y: roles/labels, ESC to close modal, focus management on open.
 - Simple, responsive layout.
 
-## Run
-- Edit index.html.
-- Comment out the functions: NETLIFY VERSION , NETLIFY HELPER
-- Uncomment the function: DATA FETCH
-- Add your NASA - API key (search for `api_key`): const api_key = 'DEMO_KEY', or just use DEMO_KEY(limited calls).
-- Open `index.html` in any browser (or use a simple local server). No build step required.
