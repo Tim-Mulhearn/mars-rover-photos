@@ -3,7 +3,7 @@
 Built with vue 3, free to use.
 
 ## NOTE
-- The API has been discontinued by NASA, so for demo purposes, im hardcoding data.
+- The API Mars Vista API
   
 ## What I built
 - Single-page Vue 3 app that shows Mars rover images.
